@@ -1,0 +1,19 @@
+{
+  "name": "Deucarian.Diagnostics.Editor",
+  "rootNamespace": "Deucarian.Diagnostics.Editor",
+  "references": [
+    "Deucarian.Diagnostics",
+    "Deucarian.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

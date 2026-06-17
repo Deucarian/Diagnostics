@@ -1,0 +1,16 @@
+{
+  "name": "Deucarian.Diagnostics.Samples.DiagnosticsDemo",
+  "rootNamespace": "Deucarian.Diagnostics.Samples.DiagnosticsDemo",
+  "references": [
+    "Deucarian.Diagnostics"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

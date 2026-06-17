@@ -1,0 +1,22 @@
+{
+  "name": "Deucarian.Diagnostics.Tests",
+  "rootNamespace": "Deucarian.Diagnostics.Tests",
+  "references": [
+    "Deucarian.Diagnostics",
+    "Deucarian.Logging"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "noEngineReferences": false
+}
