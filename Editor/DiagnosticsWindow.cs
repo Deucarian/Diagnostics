@@ -31,116 +31,152 @@ namespace Deucarian.Diagnostics.Editor
         private void OnGUI()
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+            try
+            {
+                DeucarianEditorChrome.DrawPackageHeader(
+                    "diagnostics",
+                    "Deucarian Diagnostics",
+                    "Build local diagnostic snapshots from explicitly registered providers.");
 
-            DeucarianEditorChrome.DrawPackageHeader(
-                "diagnostics",
-                "Deucarian Diagnostics",
-                "Build local diagnostic snapshots from explicitly registered providers.");
+                DrawToolbar();
+                DrawRuntimeOverlayControls();
+                DrawSummary();
+                DrawSections();
 
-            DrawToolbar();
-            DrawRuntimeOverlayControls();
-            DrawSummary();
-            DrawSections();
-
-            DeucarianEditorChrome.DrawFooterVersion("com.deucarian.diagnostics", "0.1.0");
-            EditorGUILayout.EndScrollView();
+                DeucarianEditorChrome.DrawFooterVersion("com.deucarian.diagnostics", "0.1.0");
+            }
+            finally
+            {
+                EditorGUILayout.EndScrollView();
+            }
         }
 
         private void DrawToolbar()
         {
             DeucarianEditorChrome.DrawSectionHeader("Snapshot");
             DeucarianEditorChrome.BeginSection();
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Refresh", GUILayout.Width(96)))
+            try
             {
-                RefreshReport();
-                copyStatus = null;
-            }
-
-            using (new EditorGUI.DisabledScope(report == null))
-            {
-                if (GUILayout.Button("Copy JSON", GUILayout.Width(96)))
+                EditorGUILayout.BeginHorizontal();
+                try
                 {
-                    DiagnosticsJsonExporter.CopyToClipboard(report);
-                    copyStatus = "Copied";
+                    if (GUILayout.Button("Refresh", GUILayout.Width(96)))
+                    {
+                        RefreshReport();
+                        copyStatus = null;
+                    }
+
+                    using (new EditorGUI.DisabledScope(report == null))
+                    {
+                        if (GUILayout.Button("Copy JSON", GUILayout.Width(96)))
+                        {
+                            DiagnosticsJsonExporter.CopyToClipboard(report);
+                            copyStatus = "Copied";
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(copyStatus))
+                    {
+                        EditorGUILayout.LabelField(copyStatus, GUILayout.Width(72));
+                    }
+
+                    GUILayout.FlexibleSpace();
+                }
+                finally
+                {
+                    EditorGUILayout.EndHorizontal();
                 }
             }
-
-            if (!string.IsNullOrWhiteSpace(copyStatus))
+            finally
             {
-                EditorGUILayout.LabelField(copyStatus, GUILayout.Width(72));
+                DeucarianEditorChrome.EndSection();
             }
-
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
-            DeucarianEditorChrome.EndSection();
         }
 
         private void DrawRuntimeOverlayControls()
         {
             DeucarianEditorChrome.DrawSectionHeader("Runtime Overlay");
             DeucarianEditorChrome.BeginSection();
-
-            bool isVisible = IsRuntimeOverlayVisibleInActiveScene();
-
-            EditorGUI.BeginChangeCheck();
-            bool shouldShow = EditorGUILayout.ToggleLeft("Show Runtime Overlay", isVisible);
-            if (EditorGUI.EndChangeCheck())
+            try
             {
-                SetRuntimeOverlayVisibleInActiveScene(shouldShow);
-            }
+                bool isVisible = IsRuntimeOverlayVisibleInActiveScene();
 
-            DeucarianEditorChrome.EndSection();
+                EditorGUI.BeginChangeCheck();
+                bool shouldShow = EditorGUILayout.ToggleLeft("Show Runtime Overlay", isVisible);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    SetRuntimeOverlayVisibleInActiveScene(shouldShow);
+                }
+            }
+            finally
+            {
+                DeucarianEditorChrome.EndSection();
+            }
         }
 
         private void DrawSummary()
         {
             DeucarianEditorChrome.DrawSectionHeader("Summary");
             DeucarianEditorChrome.BeginSection();
-            DiagnosticSeverity severity = report != null ? report.Severity : DiagnosticSeverity.Info;
-            DeucarianEditorStatusBadge.Draw(severity.ToString(), ToEditorStatus(severity), GUILayout.Width(100));
-            EditorGUILayout.LabelField("Sections", report != null && report.Sections != null ? report.Sections.Count.ToString() : "0");
-            DeucarianEditorChrome.EndSection();
+            try
+            {
+                DiagnosticSeverity severity = report != null ? report.Severity : DiagnosticSeverity.Info;
+                DeucarianEditorStatusBadge.Draw(severity.ToString(), ToEditorStatus(severity), GUILayout.Width(100));
+                EditorGUILayout.LabelField("Sections", report != null && report.Sections != null ? report.Sections.Count.ToString() : "0");
+            }
+            finally
+            {
+                DeucarianEditorChrome.EndSection();
+            }
         }
 
         private void DrawSections()
         {
             DeucarianEditorChrome.DrawSectionHeader("Sections");
             DeucarianEditorChrome.BeginSection();
-
-            if (report == null || report.Sections == null || report.Sections.Count == 0)
+            try
             {
-                DeucarianEditorChrome.DrawInlineHelp("No diagnostic providers are currently registered.", MessageType.Info);
+                if (report == null || report.Sections == null || report.Sections.Count == 0)
+                {
+                    DeucarianEditorChrome.DrawInlineHelp("No diagnostic providers are currently registered.", MessageType.Info);
+                    return;
+                }
+
+                for (int i = 0; i < report.Sections.Count; i++)
+                {
+                    DiagnosticSection section = report.Sections[i];
+                    if (section == null)
+                    {
+                        continue;
+                    }
+
+                    EditorGUILayout.Space();
+                    EditorGUILayout.BeginHorizontal();
+                    try
+                    {
+                        EditorGUILayout.LabelField(section.Title, EditorStyles.boldLabel);
+                        DeucarianEditorStatusBadge.Draw(section.Severity.ToString(), ToEditorStatus(section.Severity), GUILayout.Width(88));
+                    }
+                    finally
+                    {
+                        EditorGUILayout.EndHorizontal();
+                    }
+
+                    if (section.Items == null)
+                    {
+                        continue;
+                    }
+
+                    for (int j = 0; j < section.Items.Count; j++)
+                    {
+                        DrawItem(section.Items[j]);
+                    }
+                }
+            }
+            finally
+            {
                 DeucarianEditorChrome.EndSection();
-                return;
             }
-
-            for (int i = 0; i < report.Sections.Count; i++)
-            {
-                DiagnosticSection section = report.Sections[i];
-                if (section == null)
-                {
-                    continue;
-                }
-
-                EditorGUILayout.Space();
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField(section.Title, EditorStyles.boldLabel);
-                DeucarianEditorStatusBadge.Draw(section.Severity.ToString(), ToEditorStatus(section.Severity), GUILayout.Width(88));
-                EditorGUILayout.EndHorizontal();
-
-                if (section.Items == null)
-                {
-                    continue;
-                }
-
-                for (int j = 0; j < section.Items.Count; j++)
-                {
-                    DrawItem(section.Items[j]);
-                }
-            }
-
-            DeucarianEditorChrome.EndSection();
         }
 
         private static void DrawItem(DiagnosticItem item)
@@ -151,10 +187,16 @@ namespace Deucarian.Diagnostics.Editor
             }
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField(item.Label ?? item.Key, GUILayout.MinWidth(160));
-            EditorGUILayout.LabelField(item.Value ?? string.Empty);
-            DeucarianEditorStatusBadge.Draw(item.Severity.ToString(), ToEditorStatus(item.Severity), GUILayout.Width(88));
-            EditorGUILayout.EndHorizontal();
+            try
+            {
+                EditorGUILayout.LabelField(item.Label ?? item.Key, GUILayout.MinWidth(160));
+                EditorGUILayout.LabelField(item.Value ?? string.Empty);
+                DeucarianEditorStatusBadge.Draw(item.Severity.ToString(), ToEditorStatus(item.Severity), GUILayout.Width(88));
+            }
+            finally
+            {
+                EditorGUILayout.EndHorizontal();
+            }
 
             if (!string.IsNullOrWhiteSpace(item.Message))
             {
@@ -215,13 +257,17 @@ namespace Deucarian.Diagnostics.Editor
 
             GameObject prefab = FindPackageRuntimeOverlayPrefab();
             GameObject gameObject = null;
+            bool persistSceneChanges = ShouldPersistSceneChanges();
 
             if (prefab != null)
             {
-                gameObject = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+                gameObject = persistSceneChanges
+                    ? PrefabUtility.InstantiatePrefab(prefab) as GameObject
+                    : UnityEngine.Object.Instantiate(prefab);
                 if (gameObject != null)
                 {
-                    Undo.RegisterCreatedObjectUndo(gameObject, RuntimeOverlayUndoName);
+                    gameObject.name = prefab.name;
+                    RegisterCreatedObjectUndo(gameObject);
                     MoveToActiveScene(gameObject, activeScene);
                 }
             }
@@ -229,7 +275,7 @@ namespace Deucarian.Diagnostics.Editor
             if (gameObject == null)
             {
                 gameObject = new GameObject("Runtime Diagnostics Overlay");
-                Undo.RegisterCreatedObjectUndo(gameObject, RuntimeOverlayUndoName);
+                RegisterCreatedObjectUndo(gameObject);
                 MoveToActiveScene(gameObject, activeScene);
                 gameObject.AddComponent<RuntimeDiagnosticsOverlay>();
             }
@@ -244,8 +290,8 @@ namespace Deucarian.Diagnostics.Editor
                 return;
             }
 
-            Undo.RecordObject(overlay.gameObject, RuntimeOverlayUndoName);
-            Undo.RecordObject(overlay, RuntimeOverlayUndoName);
+            RecordObjectUndo(overlay.gameObject);
+            RecordObjectUndo(overlay);
 
             if (enabled && !overlay.gameObject.activeSelf)
             {
@@ -255,9 +301,12 @@ namespace Deucarian.Diagnostics.Editor
             overlay.SetVisible(enabled);
             overlay.enabled = enabled;
 
-            EditorUtility.SetDirty(overlay.gameObject);
-            EditorUtility.SetDirty(overlay);
-            MarkSceneDirty(overlay.gameObject.scene);
+            if (ShouldPersistSceneChanges())
+            {
+                EditorUtility.SetDirty(overlay.gameObject);
+                EditorUtility.SetDirty(overlay);
+                MarkSceneDirty(overlay.gameObject.scene);
+            }
         }
 
         private static RuntimeDiagnosticsOverlay[] FindRuntimeOverlaysInActiveScene()
@@ -332,9 +381,30 @@ namespace Deucarian.Diagnostics.Editor
             }
         }
 
+        private static void RegisterCreatedObjectUndo(GameObject gameObject)
+        {
+            if (gameObject != null && ShouldPersistSceneChanges())
+            {
+                Undo.RegisterCreatedObjectUndo(gameObject, RuntimeOverlayUndoName);
+            }
+        }
+
+        private static void RecordObjectUndo(UnityEngine.Object target)
+        {
+            if (target != null && ShouldPersistSceneChanges())
+            {
+                Undo.RecordObject(target, RuntimeOverlayUndoName);
+            }
+        }
+
+        private static bool ShouldPersistSceneChanges()
+        {
+            return !EditorApplication.isPlayingOrWillChangePlaymode;
+        }
+
         private static void MarkSceneDirty(Scene scene)
         {
-            if (scene.IsValid())
+            if (scene.IsValid() && ShouldPersistSceneChanges())
             {
                 EditorSceneManager.MarkSceneDirty(scene);
             }
