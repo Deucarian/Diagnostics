@@ -1,11 +1,16 @@
+using System.Collections.Generic;
 using Deucarian.Editor;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Deucarian.Diagnostics.Editor
 {
     public sealed class DiagnosticsWindow : EditorWindow
     {
+        private const string RuntimeOverlayUndoName = "Show Runtime Overlay";
+
         private DiagnosticReport report;
         private Vector2 scrollPosition;
         private string copyStatus;
@@ -33,6 +38,7 @@ namespace Deucarian.Diagnostics.Editor
                 "Build local diagnostic snapshots from explicitly registered providers.");
 
             DrawToolbar();
+            DrawRuntimeOverlayControls();
             DrawSummary();
             DrawSections();
 
@@ -67,6 +73,23 @@ namespace Deucarian.Diagnostics.Editor
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
+            DeucarianEditorChrome.EndSection();
+        }
+
+        private void DrawRuntimeOverlayControls()
+        {
+            DeucarianEditorChrome.DrawSectionHeader("Runtime Overlay");
+            DeucarianEditorChrome.BeginSection();
+
+            bool isVisible = IsRuntimeOverlayVisibleInActiveScene();
+
+            EditorGUI.BeginChangeCheck();
+            bool shouldShow = EditorGUILayout.ToggleLeft("Show Runtime Overlay", isVisible);
+            if (EditorGUI.EndChangeCheck())
+            {
+                SetRuntimeOverlayVisibleInActiveScene(shouldShow);
+            }
+
             DeucarianEditorChrome.EndSection();
         }
 
@@ -143,6 +166,178 @@ namespace Deucarian.Diagnostics.Editor
         {
             report = DiagnosticProviderRegistry.BuildReport();
             Repaint();
+        }
+
+        private static bool IsRuntimeOverlayVisibleInActiveScene()
+        {
+            RuntimeDiagnosticsOverlay[] overlays = FindRuntimeOverlaysInActiveScene();
+            for (int i = 0; i < overlays.Length; i++)
+            {
+                RuntimeDiagnosticsOverlay overlay = overlays[i];
+                if (overlay != null && overlay.isActiveAndEnabled)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void SetRuntimeOverlayVisibleInActiveScene(bool visible)
+        {
+            RuntimeDiagnosticsOverlay[] overlays = FindRuntimeOverlaysInActiveScene();
+
+            if (visible)
+            {
+                RuntimeDiagnosticsOverlay overlay = overlays.Length > 0 ? overlays[0] : CreateRuntimeOverlayInActiveScene();
+                if (overlay != null)
+                {
+                    SetRuntimeOverlayEnabled(overlay, true);
+                }
+
+                return;
+            }
+
+            for (int i = 0; i < overlays.Length; i++)
+            {
+                SetRuntimeOverlayEnabled(overlays[i], false);
+            }
+        }
+
+        private static RuntimeDiagnosticsOverlay CreateRuntimeOverlayInActiveScene()
+        {
+            Scene activeScene = SceneManager.GetActiveScene();
+            if (!activeScene.IsValid())
+            {
+                Debug.LogWarning("Cannot create RuntimeDiagnosticsOverlay because there is no valid active scene.");
+                return null;
+            }
+
+            GameObject prefab = FindPackageRuntimeOverlayPrefab();
+            GameObject gameObject = null;
+
+            if (prefab != null)
+            {
+                gameObject = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+                if (gameObject != null)
+                {
+                    Undo.RegisterCreatedObjectUndo(gameObject, RuntimeOverlayUndoName);
+                    MoveToActiveScene(gameObject, activeScene);
+                }
+            }
+
+            if (gameObject == null)
+            {
+                gameObject = new GameObject("Runtime Diagnostics Overlay");
+                Undo.RegisterCreatedObjectUndo(gameObject, RuntimeOverlayUndoName);
+                MoveToActiveScene(gameObject, activeScene);
+                gameObject.AddComponent<RuntimeDiagnosticsOverlay>();
+            }
+
+            return gameObject.GetComponentInChildren<RuntimeDiagnosticsOverlay>(true);
+        }
+
+        private static void SetRuntimeOverlayEnabled(RuntimeDiagnosticsOverlay overlay, bool enabled)
+        {
+            if (overlay == null)
+            {
+                return;
+            }
+
+            Undo.RecordObject(overlay.gameObject, RuntimeOverlayUndoName);
+            Undo.RecordObject(overlay, RuntimeOverlayUndoName);
+
+            if (enabled && !overlay.gameObject.activeSelf)
+            {
+                overlay.gameObject.SetActive(true);
+            }
+
+            overlay.SetVisible(enabled);
+            overlay.enabled = enabled;
+
+            EditorUtility.SetDirty(overlay.gameObject);
+            EditorUtility.SetDirty(overlay);
+            MarkSceneDirty(overlay.gameObject.scene);
+        }
+
+        private static RuntimeDiagnosticsOverlay[] FindRuntimeOverlaysInActiveScene()
+        {
+            Scene activeScene = SceneManager.GetActiveScene();
+            if (!activeScene.IsValid())
+            {
+                return new RuntimeDiagnosticsOverlay[0];
+            }
+
+            RuntimeDiagnosticsOverlay[] allOverlays = Resources.FindObjectsOfTypeAll<RuntimeDiagnosticsOverlay>();
+            List<RuntimeDiagnosticsOverlay> sceneOverlays = new List<RuntimeDiagnosticsOverlay>();
+
+            for (int i = 0; i < allOverlays.Length; i++)
+            {
+                RuntimeDiagnosticsOverlay overlay = allOverlays[i];
+                if (overlay == null
+                    || EditorUtility.IsPersistent(overlay)
+                    || overlay.gameObject.scene != activeScene)
+                {
+                    continue;
+                }
+
+                sceneOverlays.Add(overlay);
+            }
+
+            return sceneOverlays.ToArray();
+        }
+
+        private static GameObject FindPackageRuntimeOverlayPrefab()
+        {
+            UnityEditor.PackageManager.PackageInfo packageInfo =
+                UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(RuntimeDiagnosticsOverlay).Assembly);
+            string packageRoot = packageInfo != null ? packageInfo.assetPath : "Packages/com.deucarian.diagnostics";
+
+            if (string.IsNullOrWhiteSpace(packageRoot) || !AssetDatabase.IsValidFolder(packageRoot))
+            {
+                return null;
+            }
+
+            string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { packageRoot });
+            GameObject firstOverlayPrefab = null;
+
+            for (int i = 0; i < prefabGuids.Length; i++)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(prefabGuids[i]);
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                if (prefab == null || prefab.GetComponentInChildren<RuntimeDiagnosticsOverlay>(true) == null)
+                {
+                    continue;
+                }
+
+                if (prefab.name == nameof(RuntimeDiagnosticsOverlay))
+                {
+                    return prefab;
+                }
+
+                if (firstOverlayPrefab == null)
+                {
+                    firstOverlayPrefab = prefab;
+                }
+            }
+
+            return firstOverlayPrefab;
+        }
+
+        private static void MoveToActiveScene(GameObject gameObject, Scene activeScene)
+        {
+            if (gameObject != null && activeScene.IsValid() && gameObject.scene != activeScene)
+            {
+                SceneManager.MoveGameObjectToScene(gameObject, activeScene);
+            }
+        }
+
+        private static void MarkSceneDirty(Scene scene)
+        {
+            if (scene.IsValid())
+            {
+                EditorSceneManager.MarkSceneDirty(scene);
+            }
         }
 
         private static DeucarianEditorStatus ToEditorStatus(DiagnosticSeverity severity)

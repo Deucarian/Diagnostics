@@ -10,7 +10,7 @@ It provides:
 - explicit provider registration,
 - deterministic report building,
 - JSON export/copy support through Newtonsoft.Json,
-- an optional manually added runtime overlay,
+- an optional runtime overlay that can be manually added or toggled from the editor,
 - an editor Diagnostics Window under **Tools > Deucarian > Diagnostics > Diagnostics Window**,
 - an explicit Deucarian Logging integration helper.
 
@@ -65,7 +65,11 @@ This does not emit startup logs and does not auto-register.
 
 ## Runtime Overlay
 
-Add `RuntimeDiagnosticsOverlay` to a GameObject manually when you want a simple in-game debug view. The overlay builds reports from the current registry and can copy the current report JSON to the system clipboard.
+Enable **Show Runtime Overlay** in the Diagnostics Window when you want a simple in-game debug view in the active scene. The toggle reuses an existing `RuntimeDiagnosticsOverlay` when one is present. If none exists, it instantiates the package-owned overlay prefab when available, or creates a GameObject with `RuntimeDiagnosticsOverlay` as a fallback.
+
+Disable **Show Runtime Overlay** to hide the existing overlay without deleting it. Opening the Diagnostics Window is passive and does not create, enable, disable, or remove scene objects.
+
+You can also add `RuntimeDiagnosticsOverlay` to a GameObject manually. The overlay builds reports from the current registry and can copy the current report JSON to the system clipboard.
 
 The overlay is intended for Editor and development/debug builds. It does not create itself, open windows, or register providers automatically.
 
@@ -73,7 +77,7 @@ The overlay is intended for Editor and development/debug builds. It does not cre
 
 Open **Tools > Deucarian > Diagnostics > Diagnostics Window**.
 
-The window refreshes only when opened or when you press **Refresh**. It can copy the current report as JSON.
+The window refreshes only when opened or when you press **Refresh**. It can copy the current report as JSON and includes a **Show Runtime Overlay** toggle for the active scene.
 
 ## Object Loading Integration
 
