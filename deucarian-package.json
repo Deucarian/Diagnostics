@@ -1,0 +1,28 @@
+{
+  "packageId": "com.deucarian.diagnostics",
+  "displayName": "Deucarian Diagnostics",
+  "ownedCapabilities": [
+    "diagnostics"
+  ],
+  "runtimeAssemblies": [
+    "Deucarian.Diagnostics"
+  ],
+  "editorAssemblies": [
+    "Deucarian.Diagnostics.Editor"
+  ],
+  "sampleAssemblies": [
+    "Deucarian.Diagnostics.Samples.DiagnosticsDemo"
+  ],
+  "testAssemblies": [
+    "Deucarian.Diagnostics.Tests"
+  ],
+  "requiredDependencies": [
+    "com.deucarian.editor",
+    "com.deucarian.logging",
+    "com.unity.nuget.newtonsoft-json"
+  ],
+  "optionalVersionDefinedDependencies": [],
+  "allowedDirectDebugCalls": [],
+  "allowedDirectUnityObjectLifetimeCalls": [],
+  "expectedSamplesRoot": "Samples~"
+}
