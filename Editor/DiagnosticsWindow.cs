@@ -43,7 +43,7 @@ namespace Deucarian.Diagnostics.Editor
                 DrawSummary();
                 DrawSections();
 
-                DeucarianEditorChrome.DrawFooterVersion("com.deucarian.diagnostics", "0.1.1");
+                DeucarianEditorChrome.DrawFooterVersion("com.deucarian.diagnostics", "0.1.2");
             }
             finally
             {

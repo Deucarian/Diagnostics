@@ -26,7 +26,7 @@ https://github.com/Deucarian/Diagnostics.git#main
 
 The package depends on Deucarian Editor, Deucarian Logging, and Unity's Newtonsoft Json package.
 
-Current package version: `0.1.1`.
+Current package version: `0.1.2`.
 
 Deucarian Logging is a runtime dependency used for package-owned diagnostics categories and optional recent-log capture. Deucarian Editor is editor-only chrome for the Diagnostics window, and Newtonsoft Json is used for report export.
 

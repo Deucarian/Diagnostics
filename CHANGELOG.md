@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 - 2026-06-22
+
+- Updated exact `com.deucarian.editor` and `com.deucarian.logging` dependencies for the accepted stable release line.
+
 ## 0.1.1 - 2026-06-22
 
 - Added package-owned Diagnostics log categories backed by Deucarian Logging.
