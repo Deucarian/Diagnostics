@@ -43,7 +43,7 @@ namespace Deucarian.Diagnostics.Editor
                 DrawSummary();
                 DrawSections();
 
-                DeucarianEditorChrome.DrawFooterVersion("com.deucarian.diagnostics", "0.1.0");
+                DeucarianEditorChrome.DrawFooterVersion("com.deucarian.diagnostics", "0.1.1");
             }
             finally
             {
@@ -251,7 +251,7 @@ namespace Deucarian.Diagnostics.Editor
             Scene activeScene = SceneManager.GetActiveScene();
             if (!activeScene.IsValid())
             {
-                Debug.LogWarning("Cannot create RuntimeDiagnosticsOverlay because there is no valid active scene.");
+                DiagnosticsLog.Editor.Warning("Cannot create RuntimeDiagnosticsOverlay because there is no valid active scene.");
                 return null;
             }
 

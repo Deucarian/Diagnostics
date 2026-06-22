@@ -3,7 +3,8 @@
   "rootNamespace": "Deucarian.Diagnostics.Editor",
   "references": [
     "Deucarian.Diagnostics",
-    "Deucarian.Editor"
+    "Deucarian.Editor",
+    "Deucarian.Logging"
   ],
   "includePlatforms": [
     "Editor"

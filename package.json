@@ -1,7 +1,7 @@
 {
   "name": "com.deucarian.diagnostics",
   "displayName": "Deucarian Diagnostics",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "unity": "2021.3",
   "description": "Local diagnostics snapshots, providers, JSON export, and developer-facing runtime/editor views for Deucarian Unity projects.",
   "keywords": [
