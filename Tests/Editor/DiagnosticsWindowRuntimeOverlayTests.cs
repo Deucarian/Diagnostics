@@ -15,6 +15,10 @@ namespace Deucarian.Diagnostics.Tests
             typeof(DiagnosticsWindow).GetMethod(
                 "SetRuntimeOverlayVisibleInActiveScene",
                 BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly MethodInfo HandleRuntimeOverlayClickedMethod =
+            typeof(DiagnosticsWindow).GetMethod(
+                "HandleRuntimeOverlayClicked",
+                BindingFlags.NonPublic | BindingFlags.Instance);
 
         [SetUp]
         public void SetUp()
@@ -51,6 +55,32 @@ namespace Deucarian.Diagnostics.Tests
             Assert.AreEqual(1, overlays.Length);
             Assert.IsFalse(overlays[0].enabled);
             Assert.IsFalse(overlays[0].isActiveAndEnabled);
+        }
+
+        [Test]
+        public void RuntimeOverlayToolbarHandlerTogglesExistingSceneBehavior()
+        {
+            DiagnosticsWindow window = ScriptableObject.CreateInstance<DiagnosticsWindow>();
+            try
+            {
+                window.CreateGUI();
+                Assert.IsNotNull(HandleRuntimeOverlayClickedMethod);
+                Assert.AreEqual(0, FindActiveSceneOverlays().Length, "Opening the diagnostics workbench must remain passive.");
+
+                HandleRuntimeOverlayClickedMethod.Invoke(window, null);
+                RuntimeDiagnosticsOverlay[] overlays = FindActiveSceneOverlays();
+                Assert.AreEqual(1, overlays.Length);
+                Assert.IsTrue(overlays[0].isActiveAndEnabled);
+
+                HandleRuntimeOverlayClickedMethod.Invoke(window, null);
+                overlays = FindActiveSceneOverlays();
+                Assert.AreEqual(1, overlays.Length);
+                Assert.IsFalse(overlays[0].isActiveAndEnabled);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(window);
+            }
         }
 
         private static void SetRuntimeOverlayVisible(bool visible)
