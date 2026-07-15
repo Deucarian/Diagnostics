@@ -45,7 +45,7 @@ Development:
 "com.deucarian.diagnostics": "https://github.com/Deucarian/Diagnostics.git#develop"
 ```
 
-Current package version: `0.1.2`.
+Current package version: `0.1.3`.
 
 Dependencies:
 
@@ -170,7 +170,16 @@ The overlay is intended for Editor and development/debug builds. It does not cre
 
 Open **Tools > Deucarian > Diagnostics > Diagnostics Window**.
 
-The window refreshes only when opened or when you press **Refresh**. It can copy the current report as JSON and includes a **Show Runtime Overlay** toggle for the active scene.
+The window uses the shared Deucarian responsive workbench without a large package
+header. Its toolbar contains **Refresh**, the active-scene **Runtime Overlay**
+toggle, and the current snapshot summary. **Copy JSON** remains available in the
+shared footer alongside the aggregate severity and package version. Snapshot
+summary and provider sections use the shared panel surfaces.
+
+The layout switches at the canonical workbench boundaries: Narrow below 900 px,
+Compact from 900 through 1179 px, and Wide at 1180 px or above. The window still
+refreshes only when opened or when you press **Refresh**. Merely opening it never
+creates or mutates the runtime overlay, and scene changes remain Play-safe.
 
 ## Object Loading integration
 
@@ -184,7 +193,7 @@ Register the Object Loading diagnostics provider explicitly from the code that o
 
 - If a report is empty, confirm at least one `IDiagnosticProvider` is registered before calling `BuildReport()`.
 - If one provider fails, check the generated diagnostic error section; the rest of the snapshot should still build.
-- If the runtime overlay does not appear, open the Diagnostics Window and enable **Show Runtime Overlay**, or add `RuntimeDiagnosticsOverlay` to a GameObject manually.
+- If the runtime overlay does not appear, open the Diagnostics Window and switch **Runtime Overlay Off** to **Runtime Overlay On**, or add `RuntimeDiagnosticsOverlay` to a GameObject manually.
 - If JSON export fails to compile, confirm `com.unity.nuget.newtonsoft-json` is installed at the version declared in `package.json`.
 
 ## Validation
@@ -195,7 +204,7 @@ Run the shared package validator from the repository root:
 python C:/Repositories/Package-Registry/Tools/deucarian_package_validator.py --registry-root C:/Repositories/Package-Registry --repository-root . --config deucarian-package.json
 ```
 
-Run the package's EditMode tests in Unity after code or assembly definition changes. Tests cover provider registration, deterministic clearing, provider exception isolation, JSON export, severity aggregation, and logging provider behavior.
+Run the package's EditMode tests in Unity after code or assembly definition changes. Tests cover provider registration, deterministic clearing, provider exception isolation, JSON export, severity aggregation, logging provider behavior, workbench structure and exact responsive boundaries, toolbar actions, and runtime-overlay interaction.
 
 Documentation-only updates should still pass:
 

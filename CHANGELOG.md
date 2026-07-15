@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3 - 2026-07-15
+
+- Migrated the Diagnostics Window to the shared headerless Deucarian workbench with canonical 900/1180 responsive modes, toolbar actions, shared panels, and shared status footer.
+- Preserved snapshot refresh, JSON copy, runtime-overlay toggling, and the existing Play-safe scene guards, with structural and interaction coverage.
+
 ## 0.1.2 - 2026-06-22
 
 - Updated exact `com.deucarian.editor` and `com.deucarian.logging` dependencies for the accepted stable release line.
