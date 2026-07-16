@@ -68,8 +68,12 @@ namespace Deucarian.Diagnostics.Editor
                 rootVisualElement,
                 new DeucarianEditorWorkbenchOptions
                 {
+                    IncludeHeader = true,
                     IncludeToolbar = true,
                     IncludeFooter = true,
+                    HeaderPackageKey = "diagnostics",
+                    HeaderTitle = "Deucarian Diagnostics",
+                    HeaderSubtitle = "Inspect local runtime health and export a diagnostic snapshot.",
                     ToolbarLayout = DeucarianEditorWorkbenchToolbarLayout.CompactSingleLine,
                     TopSafeFadeName = WallpaperTopSafeFadeName
                 });

@@ -36,19 +36,29 @@ namespace Deucarian.Diagnostics.Tests
         }
 
         [Test]
-        public void CreateGuiBuildsSharedWorkbenchWithoutLegacyOnGuiHeader()
+        public void CreateGuiBuildsSharedWorkbenchHeaderToolbarAndFooter()
         {
             CreateWindow();
 
             VisualElement root = window.rootVisualElement;
             VisualElement shell = root.Q<VisualElement>(className: "deucarian-workbench");
+            VisualElement header = root.Q<VisualElement>(className: DeucarianEditorPackageHeader.RootClass);
             Button overlay = root.Q<Button>("diagnostics-runtime-overlay-toggle");
             Button refresh = root.Q<Button>("diagnostics-refresh-button");
             Button copy = root.Q<Button>("diagnostics-copy-json-button");
 
             Assert.NotNull(shell);
+            Assert.NotNull(header);
+            Assert.AreEqual(
+                "Deucarian Diagnostics",
+                header.Q<Label>(className: DeucarianEditorPackageHeader.TitleClass).text);
+            Assert.AreEqual(
+                "Inspect local runtime health and export a diagnostic snapshot.",
+                header.Q<Label>(className: DeucarianEditorPackageHeader.SubtitleClass).text);
+            Assert.NotNull(header.Q<Image>(className: DeucarianEditorPackageHeader.IconClass));
             VisualElement toolbar = root.Q<VisualElement>("deucarian-workbench-toolbar");
             Assert.NotNull(toolbar);
+            Assert.Less(shell.IndexOf(header), shell.IndexOf(toolbar));
             Assert.IsTrue(toolbar.ClassListContains(
                 DeucarianEditorWorkbenchToolbar.CompactSingleLineClass));
             Assert.NotNull(root.Q<IMGUIContainer>("diagnostics-workbench-content"));
