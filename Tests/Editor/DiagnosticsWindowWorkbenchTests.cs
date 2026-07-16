@@ -60,9 +60,12 @@ namespace Deucarian.Diagnostics.Tests
             Assert.IsTrue(overlay.ClassListContains("deucarian-workbench-toolbar__toggle"));
             Assert.IsTrue(refresh.ClassListContains("deucarian-workbench-toolbar__action--standard"));
             Assert.IsTrue(copy.ClassListContains("deucarian-workbench-operation-footer__action"));
-            Assert.NotNull(overlay.Q<Image>(className: "deucarian-workbench-toolbar__icon"));
-            Assert.NotNull(refresh.Q<Image>(className: "deucarian-workbench-toolbar__icon"));
-            Assert.NotNull(copy.Q<Image>(className: "deucarian-workbench-toolbar__icon"));
+            Assert.IsTrue(overlay.ClassListContains(DeucarianEditorIconTextButton.RootClass));
+            Assert.IsTrue(refresh.ClassListContains(DeucarianEditorIconTextButton.RootClass));
+            Assert.IsTrue(copy.ClassListContains(DeucarianEditorIconTextButton.RootClass));
+            Assert.NotNull(overlay.Q<Image>(className: DeucarianEditorIconTextButton.IconClass));
+            Assert.NotNull(refresh.Q<Image>(className: DeucarianEditorIconTextButton.IconClass));
+            Assert.NotNull(copy.Q<Image>(className: DeucarianEditorIconTextButton.IconClass));
             Assert.AreEqual(new Vector2(420f, 280f), window.minSize);
             Assert.IsNull(typeof(DiagnosticsWindow).GetMethod("OnGUI", BindingFlags.Instance | BindingFlags.NonPublic));
         }
