@@ -4,6 +4,7 @@
   "references": [
     "Deucarian.Diagnostics",
     "Deucarian.Diagnostics.Editor",
+    "Deucarian.Editor",
     "Deucarian.Logging"
   ],
   "includePlatforms": [

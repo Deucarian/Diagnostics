@@ -1,8 +1,11 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.IO;
+using Deucarian.Editor;
 using Deucarian.Diagnostics.Editor;
 using NUnit.Framework;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -44,7 +47,10 @@ namespace Deucarian.Diagnostics.Tests
             Button copy = root.Q<Button>("diagnostics-copy-json-button");
 
             Assert.NotNull(shell);
-            Assert.NotNull(root.Q<VisualElement>("deucarian-workbench-toolbar"));
+            VisualElement toolbar = root.Q<VisualElement>("deucarian-workbench-toolbar");
+            Assert.NotNull(toolbar);
+            Assert.IsTrue(toolbar.ClassListContains(
+                DeucarianEditorWorkbenchToolbar.CompactSingleLineClass));
             Assert.NotNull(root.Q<IMGUIContainer>("diagnostics-workbench-content"));
             Assert.NotNull(root.Q<VisualElement>("diagnostics-workbench-footer"));
             Assert.NotNull(root.Q<Label>("diagnostics-toolbar-summary"));
@@ -54,7 +60,31 @@ namespace Deucarian.Diagnostics.Tests
             Assert.IsTrue(overlay.ClassListContains("deucarian-workbench-toolbar__toggle"));
             Assert.IsTrue(refresh.ClassListContains("deucarian-workbench-toolbar__action--standard"));
             Assert.IsTrue(copy.ClassListContains("deucarian-workbench-operation-footer__action"));
+            Assert.NotNull(overlay.Q<Image>(className: "deucarian-workbench-toolbar__icon"));
+            Assert.NotNull(refresh.Q<Image>(className: "deucarian-workbench-toolbar__icon"));
+            Assert.NotNull(copy.Q<Image>(className: "deucarian-workbench-toolbar__icon"));
+            Assert.AreEqual(new Vector2(420f, 280f), window.minSize);
             Assert.IsNull(typeof(DiagnosticsWindow).GetMethod("OnGUI", BindingFlags.Instance | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void EmptyAndSectionStatesAvoidNestedHelpAndCardSurfaces()
+        {
+            const string assetPath = "Packages/com.deucarian.diagnostics/Editor/DiagnosticsWindow.cs";
+            PackageInfo package = PackageInfo.FindForAssetPath(assetPath);
+            string absolutePath = package == null
+                ? Path.GetFullPath("Editor/DiagnosticsWindow.cs")
+                : Path.Combine(package.resolvedPath, "Editor/DiagnosticsWindow.cs");
+            string source = File.ReadAllText(absolutePath);
+
+            StringAssert.Contains("DrawEmptySectionsState", source);
+            StringAssert.Contains("DeucarianEditorIconIds.Info", source);
+            StringAssert.Contains("DeucarianEditorWorkbenchGUI.BoldLabelStyle", source);
+            StringAssert.Contains("DeucarianEditorWorkbenchGUI.WordWrappedMiniLabelStyle", source);
+            StringAssert.DoesNotContain("DeucarianEditorChrome.DrawInlineHelp", source);
+            StringAssert.DoesNotContain("DeucarianEditorCards.DrawInlineCard", source);
+            StringAssert.DoesNotContain("EditorStyles.boldLabel", source);
+            StringAssert.DoesNotContain("EditorStyles.wordWrappedMiniLabel", source);
         }
 
         [TestCase(899f, "deucarian-responsive--narrow")]
