@@ -1,7 +1,7 @@
 {
   "name": "com.deucarian.diagnostics",
   "displayName": "Deucarian Diagnostics",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "unity": "2021.3",
   "description": "Local diagnostics snapshots, providers, JSON export, and developer-facing runtime/editor views for Deucarian Unity projects.",
   "keywords": [
@@ -20,8 +20,8 @@
     "url": "git+https://github.com/Deucarian/Diagnostics.git"
   },
   "dependencies": {
-    "com.deucarian.editor": "1.0.1",
-    "com.deucarian.logging": "1.0.1",
+    "com.deucarian.editor": "1.0.3",
+    "com.deucarian.logging": "1.0.2",
     "com.unity.nuget.newtonsoft-json": "3.2.2"
   },
   "samples": [

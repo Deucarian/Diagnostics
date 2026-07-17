@@ -45,7 +45,7 @@ Development:
 "com.deucarian.diagnostics": "https://github.com/Deucarian/Diagnostics.git#develop"
 ```
 
-Current package version: `0.1.3`.
+Current package version: `0.1.4`.
 
 Dependencies:
 
