@@ -1,6 +1,7 @@
 {
   "packageId": "com.deucarian.diagnostics",
   "displayName": "Deucarian Diagnostics",
+  "samplePolicy": "tool",
   "ownedCapabilities": [
     "diagnostics"
   ],
