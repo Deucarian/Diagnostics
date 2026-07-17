@@ -119,6 +119,9 @@ namespace Deucarian.Diagnostics.Editor
 
         private void BuildToolbar()
         {
+            DeucarianEditorCommandBarLanes lanes =
+                DeucarianEditorCommandBar.CreateLanes(workbench.Toolbar);
+
             runtimeOverlayButton = DeucarianEditorCommandBar.CreateToggle(
                 "Runtime Overlay",
                 HandleRuntimeOverlayClicked,
@@ -128,12 +131,10 @@ namespace Deucarian.Diagnostics.Editor
             runtimeOverlayButton.name = RuntimeOverlayButtonName;
             runtimeOverlayButton.tooltip = "Show or hide the runtime diagnostics overlay in the active scene.";
             DeucarianEditorCommandBar.SetMinimumWidth(runtimeOverlayButton, 160f);
-            workbench.Toolbar.Add(runtimeOverlayButton);
+            lanes.Leading.Add(runtimeOverlayButton);
 
-            toolbarSummary = DeucarianEditorCommandBar.CreateSummary(string.Empty);
+            toolbarSummary = lanes.Summary;
             toolbarSummary.name = ToolbarSummaryName;
-            workbench.Toolbar.Add(toolbarSummary);
-            workbench.Toolbar.Add(DeucarianEditorCommandBar.CreateSpacer());
 
             refreshButton = DeucarianEditorCommandBar.CreateAction(
                 DeucarianEditorIconIds.Refresh,
@@ -143,20 +144,23 @@ namespace Deucarian.Diagnostics.Editor
                 "Build a fresh local diagnostics snapshot.");
             refreshButton.name = RefreshButtonName;
             refreshButton.tooltip = "Build a fresh local diagnostics snapshot.";
-            workbench.Toolbar.Add(refreshButton);
+            lanes.Trailing.Add(refreshButton);
         }
 
         private void DrawWorkbenchContent()
         {
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-            try
+            using (DeucarianEditorWorkbenchGUI.BeginEmbeddedPage(GUILayout.ExpandHeight(true)))
             {
-                DrawSummary();
-                DrawSections();
-            }
-            finally
-            {
-                EditorGUILayout.EndScrollView();
+                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+                try
+                {
+                    DrawSummary();
+                    DrawSections();
+                }
+                finally
+                {
+                    EditorGUILayout.EndScrollView();
+                }
             }
         }
 
@@ -230,12 +234,16 @@ namespace Deucarian.Diagnostics.Editor
         {
             using (new EditorGUILayout.HorizontalScope())
             {
-                Rect iconRect = GUILayoutUtility.GetRect(16f, 16f, GUILayout.Width(16f));
+                float iconSize = DeucarianEditorLayoutMetrics.IconSize;
+                Rect iconRect = GUILayoutUtility.GetRect(
+                    iconSize,
+                    iconSize,
+                    GUILayout.Width(iconSize));
                 DeucarianEditorIcons.DrawIcon(
                     iconRect,
                     DeucarianEditorIcons.GetIcon(DeucarianEditorIconIds.Info),
                     DeucarianEditorTheme.MutedText);
-                GUILayout.Space(6f);
+                GUILayout.Space(DeucarianEditorLayoutMetrics.IconTextGap);
                 EditorGUILayout.LabelField(
                     "No diagnostic providers are currently registered.",
                     DeucarianEditorWorkbenchGUI.WordWrappedMiniLabelStyle);
