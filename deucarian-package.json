@@ -19,6 +19,7 @@
   "requiredDependencies": [
     "com.deucarian.editor",
     "com.deucarian.logging",
+    "com.unity.modules.imgui",
     "com.unity.nuget.newtonsoft-json"
   ],
   "optionalVersionDefinedDependencies": [],
