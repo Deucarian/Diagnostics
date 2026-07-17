@@ -52,6 +52,15 @@ namespace Deucarian.Diagnostics.Tests
             VisualElement toolbar = root.Q<VisualElement>("deucarian-workbench-toolbar");
             Assert.NotNull(toolbar);
             Assert.IsTrue(toolbar.ClassListContains(DeucarianEditorCommandBar.RootClass));
+            VisualElement leadingLane = toolbar.Q<VisualElement>(
+                className: DeucarianEditorCommandBar.LeadingLaneClass);
+            Label summaryLane = toolbar.Q<Label>(
+                className: DeucarianEditorCommandBar.SummaryLaneClass);
+            VisualElement trailingLane = toolbar.Q<VisualElement>(
+                className: DeucarianEditorCommandBar.TrailingLaneClass);
+            Assert.NotNull(leadingLane);
+            Assert.NotNull(summaryLane);
+            Assert.NotNull(trailingLane);
             Assert.IsTrue(toolbar.ClassListContains(
                 DeucarianEditorWorkbenchToolbar.CompactSingleLineClass));
             Assert.NotNull(root.Q<IMGUIContainer>("diagnostics-workbench-content"));
@@ -60,6 +69,9 @@ namespace Deucarian.Diagnostics.Tests
             Assert.NotNull(overlay);
             Assert.NotNull(refresh);
             Assert.NotNull(copy);
+            Assert.AreSame(leadingLane, overlay.parent);
+            Assert.AreSame(summaryLane, root.Q<Label>("diagnostics-toolbar-summary"));
+            Assert.AreSame(trailingLane, refresh.parent);
             Assert.IsTrue(overlay.ClassListContains("deucarian-workbench-toolbar__toggle"));
             Assert.IsTrue(refresh.ClassListContains("deucarian-workbench-toolbar__action--standard"));
             Assert.IsTrue(copy.ClassListContains("deucarian-workbench-operation-footer__action"));
@@ -85,6 +97,17 @@ namespace Deucarian.Diagnostics.Tests
             Assert.AreEqual(160f, overlay.style.minWidth.value.value);
             Assert.AreEqual(0f, overlay.style.flexShrink.value);
             Assert.AreEqual(
+                DeucarianEditorLayoutMetrics.CommandControlHeight,
+                overlay.style.height.value.value);
+            Assert.AreEqual(
+                DeucarianEditorLayoutMetrics.TextLineHeight,
+                overlay.Q<Label>(className: DeucarianEditorIconTextButton.LabelClass)
+                    .style.height.value.value);
+            Assert.AreEqual(
+                DeucarianEditorLayoutMetrics.TextLineHeight,
+                toolbar.Q<Label>(className: DeucarianEditorCommandBar.SummaryLaneClass)
+                    .style.height.value.value);
+            Assert.AreEqual(
                 PickingMode.Ignore,
                 overlay.Q<VisualElement>(
                     className: DeucarianEditorIconTextButton.ContentClass).pickingMode);
@@ -108,8 +131,12 @@ namespace Deucarian.Diagnostics.Tests
 
             StringAssert.Contains("DrawEmptySectionsState", source);
             StringAssert.Contains("DeucarianEditorCommandBar", source);
+            StringAssert.Contains("BeginEmbeddedPage", source);
+            StringAssert.DoesNotContain("BeginSettingsPage", source);
             StringAssert.Contains("// IncludeHeader = true", source);
             StringAssert.Contains("DeucarianEditorIconIds.Info", source);
+            StringAssert.Contains("DeucarianEditorLayoutMetrics.IconSize", source);
+            StringAssert.Contains("DeucarianEditorLayoutMetrics.IconTextGap", source);
             StringAssert.Contains("DeucarianEditorWorkbenchGUI.BoldLabelStyle", source);
             StringAssert.Contains("DeucarianEditorWorkbenchGUI.WordWrappedMiniLabelStyle", source);
             StringAssert.DoesNotContain("DeucarianEditorChrome.DrawInlineHelp", source);
