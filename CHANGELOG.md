@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4 - 2026-07-17
+
+- Applied the tool sample contract and aligned exact Editor and Logging dependencies.
+
 ## 0.1.3 - 2026-07-15
 
 - Migrated the Diagnostics Window to the shared headerless Deucarian workbench with canonical 900/1180 responsive modes, toolbar actions, shared panels, and shared status footer.
