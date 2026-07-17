@@ -36,19 +36,22 @@ namespace Deucarian.Diagnostics.Tests
         }
 
         [Test]
-        public void CreateGuiBuildsSharedWorkbenchWithoutLegacyOnGuiHeader()
+        public void CreateGuiBuildsSharedCommandBarAndFooterWithoutPackageHeader()
         {
             CreateWindow();
 
             VisualElement root = window.rootVisualElement;
             VisualElement shell = root.Q<VisualElement>(className: "deucarian-workbench");
+            VisualElement header = root.Q<VisualElement>(className: DeucarianEditorPackageHeader.RootClass);
             Button overlay = root.Q<Button>("diagnostics-runtime-overlay-toggle");
             Button refresh = root.Q<Button>("diagnostics-refresh-button");
             Button copy = root.Q<Button>("diagnostics-copy-json-button");
 
             Assert.NotNull(shell);
+            Assert.IsNull(header);
             VisualElement toolbar = root.Q<VisualElement>("deucarian-workbench-toolbar");
             Assert.NotNull(toolbar);
+            Assert.IsTrue(toolbar.ClassListContains(DeucarianEditorCommandBar.RootClass));
             Assert.IsTrue(toolbar.ClassListContains(
                 DeucarianEditorWorkbenchToolbar.CompactSingleLineClass));
             Assert.NotNull(root.Q<IMGUIContainer>("diagnostics-workbench-content"));
@@ -63,9 +66,32 @@ namespace Deucarian.Diagnostics.Tests
             Assert.IsTrue(overlay.ClassListContains(DeucarianEditorIconTextButton.RootClass));
             Assert.IsTrue(refresh.ClassListContains(DeucarianEditorIconTextButton.RootClass));
             Assert.IsTrue(copy.ClassListContains(DeucarianEditorIconTextButton.RootClass));
+            Assert.IsTrue(overlay.ClassListContains(DeucarianEditorCommandBar.ToggleClass));
+            Assert.IsTrue(refresh.ClassListContains(DeucarianEditorCommandBar.ActionClass));
             Assert.NotNull(overlay.Q<Image>(className: DeucarianEditorIconTextButton.IconClass));
             Assert.NotNull(refresh.Q<Image>(className: DeucarianEditorIconTextButton.IconClass));
             Assert.NotNull(copy.Q<Image>(className: DeucarianEditorIconTextButton.IconClass));
+            Assert.NotNull(overlay.Q<VisualElement>(
+                className: DeucarianEditorIconTextButton.GapClass));
+            Assert.NotNull(refresh.Q<VisualElement>(
+                className: DeucarianEditorIconTextButton.GapClass));
+            Assert.NotNull(copy.Q<VisualElement>(
+                className: DeucarianEditorIconTextButton.GapClass));
+            Assert.AreEqual(
+                "Runtime Overlay Off",
+                overlay.Q<Label>(className: DeucarianEditorIconTextButton.LabelClass).text);
+            Assert.AreEqual(8f, overlay.style.paddingLeft.value.value);
+            Assert.AreEqual(8f, overlay.style.paddingRight.value.value);
+            Assert.AreEqual(160f, overlay.style.minWidth.value.value);
+            Assert.AreEqual(0f, overlay.style.flexShrink.value);
+            Assert.AreEqual(
+                PickingMode.Ignore,
+                overlay.Q<VisualElement>(
+                    className: DeucarianEditorIconTextButton.ContentClass).pickingMode);
+            Assert.AreEqual(
+                8f,
+                copy.Q<VisualElement>(
+                    className: DeucarianEditorIconTextButton.GapClass).style.width.value.value);
             Assert.AreEqual(new Vector2(420f, 280f), window.minSize);
             Assert.IsNull(typeof(DiagnosticsWindow).GetMethod("OnGUI", BindingFlags.Instance | BindingFlags.NonPublic));
         }
@@ -81,6 +107,8 @@ namespace Deucarian.Diagnostics.Tests
             string source = File.ReadAllText(absolutePath);
 
             StringAssert.Contains("DrawEmptySectionsState", source);
+            StringAssert.Contains("DeucarianEditorCommandBar", source);
+            StringAssert.Contains("// IncludeHeader = true", source);
             StringAssert.Contains("DeucarianEditorIconIds.Info", source);
             StringAssert.Contains("DeucarianEditorWorkbenchGUI.BoldLabelStyle", source);
             StringAssert.Contains("DeucarianEditorWorkbenchGUI.WordWrappedMiniLabelStyle", source);

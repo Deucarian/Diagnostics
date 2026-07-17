@@ -68,8 +68,14 @@ namespace Deucarian.Diagnostics.Editor
                 rootVisualElement,
                 new DeucarianEditorWorkbenchOptions
                 {
+                    // Package headers are intentionally disabled for now. Keep the
+                    // shared header implementation available for a future UI pass.
+                    // IncludeHeader = true,
                     IncludeToolbar = true,
                     IncludeFooter = true,
+                    // HeaderPackageKey = "diagnostics",
+                    // HeaderTitle = "Deucarian Diagnostics",
+                    // HeaderSubtitle = "Inspect local runtime health and export a diagnostic snapshot.",
                     ToolbarLayout = DeucarianEditorWorkbenchToolbarLayout.CompactSingleLine,
                     TopSafeFadeName = WallpaperTopSafeFadeName
                 });
@@ -91,7 +97,7 @@ namespace Deucarian.Diagnostics.Editor
             footer.Summary.name = FooterSummaryName;
             footer.Action.name = CopyJsonButtonName;
             footer.Action.tooltip = "Copy the current diagnostics snapshot as JSON.";
-            DeucarianEditorWorkbenchToolbar.SetButtonIcon(
+            DeucarianEditorCommandBar.ConfigureAction(
                 footer.Action,
                 DeucarianEditorIconIds.Copy,
                 "Copy JSON",
@@ -113,22 +119,23 @@ namespace Deucarian.Diagnostics.Editor
 
         private void BuildToolbar()
         {
-            runtimeOverlayButton = DeucarianEditorWorkbenchToolbar.CreateIconToggleButton(
-                DeucarianEditorIconIds.Monitor,
+            runtimeOverlayButton = DeucarianEditorCommandBar.CreateToggle(
                 "Runtime Overlay",
                 HandleRuntimeOverlayClicked,
                 false,
+                DeucarianEditorIconIds.Monitor,
                 "Show or hide the runtime diagnostics overlay in the active scene.");
             runtimeOverlayButton.name = RuntimeOverlayButtonName;
             runtimeOverlayButton.tooltip = "Show or hide the runtime diagnostics overlay in the active scene.";
+            DeucarianEditorCommandBar.SetMinimumWidth(runtimeOverlayButton, 160f);
             workbench.Toolbar.Add(runtimeOverlayButton);
 
-            toolbarSummary = DeucarianEditorWorkbenchToolbar.CreateSummary(string.Empty);
+            toolbarSummary = DeucarianEditorCommandBar.CreateSummary(string.Empty);
             toolbarSummary.name = ToolbarSummaryName;
             workbench.Toolbar.Add(toolbarSummary);
-            workbench.Toolbar.Add(DeucarianEditorWorkbenchToolbar.CreateSpacer());
+            workbench.Toolbar.Add(DeucarianEditorCommandBar.CreateSpacer());
 
-            refreshButton = DeucarianEditorWorkbenchToolbar.CreateIconActionButton(
+            refreshButton = DeucarianEditorCommandBar.CreateAction(
                 DeucarianEditorIconIds.Refresh,
                 "Refresh",
                 HandleRefreshClicked,
@@ -310,13 +317,15 @@ namespace Deucarian.Diagnostics.Editor
 
             if (footer != null)
             {
-                footer.StatusIcon.text = GetSeverityMarker(severity);
                 footer.StatusLabel.text = severity.ToString();
                 footer.Summary.text = string.IsNullOrWhiteSpace(copyStatus)
                     ? sectionCount + (sectionCount == 1 ? " diagnostic section" : " diagnostic sections")
                     : copyStatus;
                 footer.Summary.tooltip = footer.Summary.text;
                 footer.Action.SetEnabled(report != null);
+                DeucarianEditorWorkbenchSurfaces.SetFooterIcon(
+                    footer,
+                    GetSeverityIconId(severity));
                 DeucarianEditorWorkbenchSurfaces.SetFooterStatus(footer, ToEditorStatus(severity));
             }
 
@@ -331,8 +340,8 @@ namespace Deucarian.Diagnostics.Editor
             }
 
             bool visible = IsRuntimeOverlayVisibleInActiveScene();
-            DeucarianEditorWorkbenchToolbar.SetToggleActive(runtimeOverlayButton, visible);
-            DeucarianEditorWorkbenchToolbar.SetIconActionButtonText(
+            DeucarianEditorCommandBar.SetActive(runtimeOverlayButton, visible);
+            DeucarianEditorCommandBar.SetText(
                 runtimeOverlayButton,
                 visible ? "Runtime Overlay On" : "Runtime Overlay Off");
         }
@@ -597,6 +606,20 @@ namespace Deucarian.Diagnostics.Editor
                     return MessageType.Error;
                 default:
                     return MessageType.Info;
+            }
+        }
+
+        private static string GetSeverityIconId(DiagnosticSeverity severity)
+        {
+            switch (severity)
+            {
+                case DiagnosticSeverity.Success:
+                    return DeucarianEditorIconIds.Check;
+                case DiagnosticSeverity.Warning:
+                case DiagnosticSeverity.Error:
+                    return DeucarianEditorIconIds.Warning;
+                default:
+                    return DeucarianEditorIconIds.Info;
             }
         }
 
