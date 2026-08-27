@@ -4,7 +4,7 @@ namespace Deucarian.Diagnostics.Editor
 {
     public static class DiagnosticsMenu
     {
-        private const string MenuPath = "Tools/Deucarian/Tools and Quality/Diagnostics";
+        public const string MenuPath = "Tools/Deucarian/Diagnostics";
 
         [MenuItem(MenuPath)]
         public static void OpenDiagnosticsWindow()

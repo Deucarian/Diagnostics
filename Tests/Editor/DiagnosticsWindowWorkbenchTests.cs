@@ -16,6 +16,14 @@ namespace Deucarian.Diagnostics.Tests
         private DiagnosticsWindow window;
         private string previousClipboard;
 
+        [Test]
+        public void PackageExposesDirectCapabilityMenu()
+        {
+            Assert.AreEqual(
+                "Tools/Deucarian/Diagnostics",
+                DiagnosticsMenu.MenuPath);
+        }
+
         [SetUp]
         public void SetUp()
         {
