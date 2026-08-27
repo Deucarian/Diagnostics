@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5 - 2026-08-26
+
+- Moved the editor window to the direct capability menu
+  `Tools/Deucarian/Diagnostics` and added regression coverage.
+- Updated exact Editor and Logging dependencies for the coordinated editor UX
+  release.
+
 ## 0.1.4 - 2026-07-17
 
 - Applied the tool sample contract and aligned exact Editor and Logging dependencies.
