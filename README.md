@@ -11,7 +11,7 @@ It provides:
 - deterministic report building,
 - JSON export/copy support through Newtonsoft.Json,
 - an optional runtime overlay that can be manually added or toggled from the editor,
-- an editor Diagnostics Window under **Tools > Deucarian > Diagnostics > Diagnostics Window**,
+- an editor Diagnostics Window under **Tools > Deucarian > Diagnostics...**,
 - an explicit Deucarian Logging integration helper.
 
 This package is not analytics, telemetry, remote logging, crash reporting, or an upload platform. It does not send data anywhere.
@@ -20,7 +20,7 @@ This package is not analytics, telemetry, remote logging, crash reporting, or an
 
 - You need explicit local diagnostic snapshots from runtime systems.
 - You want a development/runtime overlay that can copy report JSON.
-- You need an editor diagnostics view under **Tools > Deucarian > Diagnostics > Diagnostics Window**.
+- You need an editor diagnostics view under **Tools > Deucarian > Diagnostics...**.
 - You want recent Deucarian Logging entries to appear in local diagnostic reports after opt-in.
 
 ## When not to use it
@@ -45,7 +45,7 @@ Development:
 "com.deucarian.diagnostics": "https://github.com/Deucarian/Diagnostics.git#develop"
 ```
 
-Current package version: `0.1.5`.
+Current package version: `0.1.6`.
 
 Dependencies:
 
@@ -77,7 +77,7 @@ registration.Dispose();
 Open the editor view from:
 
 ```text
-Tools > Deucarian > Diagnostics > Diagnostics Window
+Tools > Deucarian > Diagnostics...
 ```
 
 ## Samples
@@ -168,7 +168,7 @@ The overlay is intended for Editor and development/debug builds. It does not cre
 
 ## Editor window
 
-Open **Tools > Deucarian > Diagnostics > Diagnostics Window**.
+Open **Tools > Deucarian > Diagnostics...**.
 
 The window uses the shared Deucarian responsive workbench without a large package
 header. Its toolbar contains **Refresh**, the active-scene **Runtime Overlay**

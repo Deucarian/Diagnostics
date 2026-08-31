@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6 - 2026-08-31
+
+- Registered the Diagnostics tool and a sanitized aggregate provider-health card with Deucarian Control Center.
+- Moved the standalone entry to `Tools/Deucarian/Diagnostics...`.
+- Updated the shared editor dependency to `com.deucarian.editor` 1.2.0.
+
 ## 0.1.5 - 2026-08-26
 
 - Moved the editor window to the direct capability menu
