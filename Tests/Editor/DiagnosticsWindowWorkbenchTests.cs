@@ -20,7 +20,7 @@ namespace Deucarian.Diagnostics.Tests
         public void PackageExposesDirectCapabilityMenu()
         {
             Assert.AreEqual(
-                "Tools/Deucarian/Diagnostics",
+                "Tools/Deucarian/Diagnostics...",
                 DiagnosticsMenu.MenuPath);
         }
 
@@ -135,7 +135,7 @@ namespace Deucarian.Diagnostics.Tests
             string absolutePath = package == null
                 ? Path.GetFullPath("Editor/DiagnosticsWindow.cs")
                 : Path.Combine(package.resolvedPath, "Editor/DiagnosticsWindow.cs");
-            string source = File.ReadAllText(absolutePath);
+            string source = ReadPartialClassSource(absolutePath);
 
             StringAssert.Contains("DrawEmptySectionsState", source);
             StringAssert.Contains("DeucarianEditorCommandBar", source);
@@ -225,6 +225,17 @@ namespace Deucarian.Diagnostics.Tests
             MethodInfo method = target.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.NotNull(method, methodName);
             method.Invoke(target, null);
+        }
+
+        private static string ReadPartialClassSource(string primaryPath)
+        {
+            string directory = Path.GetDirectoryName(primaryPath);
+            string stem = Path.GetFileNameWithoutExtension(primaryPath);
+            return string.Join(
+                Environment.NewLine,
+                Directory.GetFiles(directory, stem + "*.cs")
+                    .OrderBy(path => path, StringComparer.Ordinal)
+                    .Select(File.ReadAllText));
         }
 
         private sealed class WorkbenchProvider : IDiagnosticProvider
