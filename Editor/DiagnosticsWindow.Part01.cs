@@ -14,7 +14,8 @@ namespace Deucarian.Diagnostics.Editor
 
         public static void OpenWindow()
         {
-            DiagnosticsWindow window = GetWindow<DiagnosticsWindow>("Diagnostics");
+            DiagnosticsWindow window = DeucarianEditorWindowPages.GetStandalone<DiagnosticsWindow>("Diagnostics");
+            window.navigation?.Navigate(DeucarianToolIds.Diagnostics);
             DeucarianEditorWorkspace.ConfigureWindow(window);
             window.RefreshReport();
             window.Show();
@@ -32,15 +33,31 @@ namespace Deucarian.Diagnostics.Editor
 
         private void OnDisable()
         {
+            navigation?.Dispose();
+            navigation = null;
             workspace?.Dispose();
             workspace = null;
         }
-
         public void CreateGUI()
         {
+            navigation?.Dispose();
+            navigation = new DeucarianEditorPageSession(this, DeucarianToolIds.Diagnostics, BuildPage);
+        }
+
+        internal static IDeucarianEditorPage CreatePage() =>
+            DeucarianEditorWindowPages.Create<DiagnosticsWindow>(
+                (window, root) => window.BuildPage(root), activate: (window, route) => window.UpdatePresentation(), update: window => window.UpdateRuntimeOverlayPresentation());
+
+        private DeucarianEditorPageSession navigation;
+        private VisualElement pageRoot;
+        private VisualElement PageRoot => pageRoot ?? rootVisualElement;
+
+        private void BuildPage(VisualElement root)
+        {
+            pageRoot = root;
             workspace?.Dispose();
-            rootVisualElement.Clear();
-            workspace = new DeucarianEditorCollectionWorkspace(rootVisualElement, Application.productName,
+            PageRoot.Clear();
+            workspace = new DeucarianEditorCollectionWorkspace(PageRoot, Application.productName,
                 "Diagnostics", "A local snapshot. Start with what needs attention.",
                 DeucarianToolIds.Diagnostics, "Search diagnostic sections…");
             var shell = workspace.Workspace;

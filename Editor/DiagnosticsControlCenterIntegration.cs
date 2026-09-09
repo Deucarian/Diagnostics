@@ -22,7 +22,7 @@ namespace Deucarian.Diagnostics.Editor
                 PackageId,
                 "console.infoicon",
                 new[] { "health", "snapshot", "providers", "logging" },
-                10));
+                10, createPage: DiagnosticsWindow.CreatePage));
             DeucarianControlCenterRegistry.RegisterCardProvider(
                 new DiagnosticsCardProvider());
         }
