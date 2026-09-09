@@ -137,7 +137,7 @@ namespace Deucarian.Diagnostics.Editor
                         "diagnostics.open",
                         "Open Diagnostics",
                         DiagnosticsWindow.OpenWindow,
-                        "Inspect the full local diagnostic report."),
+                        "Inspect the full local diagnostic report.", navigationToolId: DeucarianToolIds.Diagnostics),
                     new DeucarianControlCenterAction(
                         "diagnostics.refresh-summary",
                         "Refresh Summary",
