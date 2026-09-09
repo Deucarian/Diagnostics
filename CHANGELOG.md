@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0 - 2026-09-09
+
+- Migrate to the shared Editor workspace with attention-first filtering, captured section details, explicit snapshot refresh, JSON copying and an opt-in runtime overlay.
+
 ## 0.1.6 - 2026-08-31
 
 - Registered the Diagnostics tool and a sanitized aggregate provider-health card with Deucarian Control Center.

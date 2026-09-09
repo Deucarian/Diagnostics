@@ -25,10 +25,13 @@ namespace Deucarian.Diagnostics.Editor
         private DiagnosticReport report;
         private Vector2 scrollPosition;
         private string copyStatus;
-        private DeucarianEditorWorkbench workbench;
+        private DeucarianEditorCollectionWorkspace workspace;
+        private string selectedSection;
+        private bool showAll;
+        private string search = string.Empty;
         private Button refreshButton;
         private Button runtimeOverlayButton;
         private Label toolbarSummary;
-        private DeucarianEditorWorkbenchFooter footer;
+        private Button copyButton;
     }
 }
