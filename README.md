@@ -4,7 +4,7 @@
 
 Migrate to the shared Editor workspace with attention-first filtering, captured section details, explicit snapshot refresh, JSON copying and an opt-in runtime overlay.
 
-Requires Editor 1.4.0 or newer. Development is delivered through Git `#develop`; this change does not promote the stable `#main` channel.
+Requires Editor 1.4.1 or newer. Development is delivered through Git `#develop`; this change does not promote the stable `#main` channel.
 
 ## What this is
 
