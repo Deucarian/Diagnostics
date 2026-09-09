@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.1] - 2026-09-09
+
+- Keep sidebar navigation in the current workspace and retain page drafts while switching tools.
+- Support explicitly opening independent workspaces through the sidebar context menu.
+
+
 ## 0.2.0 - 2026-09-09
 
 - Migrate to the shared Editor workspace with attention-first filtering, captured section details, explicit snapshot refresh, JSON copying and an opt-in runtime overlay.
