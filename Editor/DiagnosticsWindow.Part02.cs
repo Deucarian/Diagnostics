@@ -239,9 +239,5 @@ namespace Deucarian.Diagnostics.Editor
             }
         }
 
-        internal static void ApplyPreferredSizeOnce(DiagnosticsWindow window)
-        {
-            if (window != null) DeucarianEditorWorkspace.ConfigureWindow(window);
-        }
     }
 }

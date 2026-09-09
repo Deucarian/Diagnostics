@@ -15,18 +15,16 @@ namespace Deucarian.Diagnostics.Editor
         public static void OpenWindow()
         {
             DiagnosticsWindow window = GetWindow<DiagnosticsWindow>("Diagnostics");
-            window.minSize = DeucarianEditorWorkspace.MinimumWindowSize;
-            ApplyPreferredSizeOnce(window);
+            DeucarianEditorWorkspace.ConfigureWindow(window);
             window.RefreshReport();
             window.Show();
         }
 
         private void OnEnable()
         {
-            minSize = DeucarianEditorWorkspace.MinimumWindowSize;
             if (!Application.isBatchMode)
             {
-                ApplyPreferredSizeOnce(this);
+                DeucarianEditorWorkspace.ConfigureWindow(this);
             }
 
             RefreshReport();
