@@ -15,6 +15,7 @@ namespace Deucarian.Diagnostics.Editor
         public static void OpenWindow()
         {
             DiagnosticsWindow window = DeucarianEditorWindowPages.GetStandalone<DiagnosticsWindow>("Diagnostics");
+            window.navigation?.Navigate(DeucarianToolIds.Diagnostics);
             DeucarianEditorWorkspace.ConfigureWindow(window);
             window.RefreshReport();
             window.Show();
