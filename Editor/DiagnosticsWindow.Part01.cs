@@ -15,7 +15,7 @@ namespace Deucarian.Diagnostics.Editor
         public static void OpenWindow()
         {
             DiagnosticsWindow window = GetWindow<DiagnosticsWindow>("Diagnostics");
-            window.minSize = new Vector2(420f, 280f);
+            window.minSize = DeucarianEditorWorkspace.MinimumWindowSize;
             ApplyPreferredSizeOnce(window);
             window.RefreshReport();
             window.Show();
@@ -23,7 +23,7 @@ namespace Deucarian.Diagnostics.Editor
 
         private void OnEnable()
         {
-            minSize = new Vector2(420f, 280f);
+            minSize = DeucarianEditorWorkspace.MinimumWindowSize;
             if (!Application.isBatchMode)
             {
                 ApplyPreferredSizeOnce(this);

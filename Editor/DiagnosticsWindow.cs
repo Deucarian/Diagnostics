@@ -19,8 +19,6 @@ namespace Deucarian.Diagnostics.Editor
         private const string CopyJsonButtonName = "diagnostics-copy-json-button";
         private const string FooterSummaryName = "diagnostics-footer-summary";
         private const string WallpaperTopSafeFadeName = "diagnostics-wallpaper-top-safe-fade";
-        private const string PreferredSizeKey = "Deucarian.Diagnostics.PreferredSize.520x340";
-        private static readonly Vector2 PreferredSize = new Vector2(520f, 340f);
 
         private DiagnosticReport report;
         private Vector2 scrollPosition;
