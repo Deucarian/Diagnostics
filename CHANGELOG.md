@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.3] - 2026-09-09
+
+### Changed
+
+- Adopt the shared Editor 1.7 workspace presentation: neutral surfaces, readable typography, consistent actions and aligned controls.
+- Preserve package workflows and native serialized editing; this is an editor-only presentation update.
+
+## [0.2.2] - 2026-09-09
+
+- Register package tooling and navigation actions as shared Control Center pages. Preserve the domain workflow while using Editor-owned submenus, in-window navigation, and UI scaling.
+
+## [0.2.1] - 2026-09-09
+
+- Keep sidebar navigation in the current workspace and retain page drafts while switching tools.
+- Support explicitly opening independent workspaces through the sidebar context menu.
+
+
+## 0.2.0 - 2026-09-09
+
+- Migrate to the shared Editor workspace with attention-first filtering, captured section details, explicit snapshot refresh, JSON copying and an opt-in runtime overlay.
+
 ## 0.1.6 - 2026-08-31
 
 - Registered the Diagnostics tool and a sanitized aggregate provider-health card with Deucarian Control Center.

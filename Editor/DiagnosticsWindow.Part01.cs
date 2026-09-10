@@ -14,19 +14,18 @@ namespace Deucarian.Diagnostics.Editor
 
         public static void OpenWindow()
         {
-            DiagnosticsWindow window = GetWindow<DiagnosticsWindow>("Diagnostics");
-            window.minSize = new Vector2(420f, 280f);
-            ApplyPreferredSizeOnce(window);
+            DiagnosticsWindow window = DeucarianEditorWindowPages.GetStandalone<DiagnosticsWindow>("Diagnostics");
+            window.navigation?.Navigate(DeucarianToolIds.Diagnostics);
+            DeucarianEditorWorkspace.ConfigureWindow(window);
             window.RefreshReport();
             window.Show();
         }
 
         private void OnEnable()
         {
-            minSize = new Vector2(420f, 280f);
             if (!Application.isBatchMode)
             {
-                ApplyPreferredSizeOnce(this);
+                DeucarianEditorWorkspace.ConfigureWindow(this);
             }
 
             RefreshReport();
@@ -34,231 +33,104 @@ namespace Deucarian.Diagnostics.Editor
 
         private void OnDisable()
         {
-            workbench?.Dispose();
-            workbench = null;
-            refreshButton = null;
-            runtimeOverlayButton = null;
-            toolbarSummary = null;
-            footer = null;
+            navigation?.Dispose();
+            navigation = null;
+            workspace?.Dispose();
+            workspace = null;
         }
-
         public void CreateGUI()
         {
-            workbench?.Dispose();
-            workbench = DeucarianEditorWorkbench.Create(
-                rootVisualElement,
-                new DeucarianEditorWorkbenchOptions
-                {
-                    // Package headers are intentionally disabled for now. Keep the
-                    // shared header implementation available for a future UI pass.
-                    // IncludeHeader = true,
-                    IncludeToolbar = true,
-                    IncludeFooter = true,
-                    // HeaderPackageKey = "diagnostics",
-                    // HeaderTitle = "Deucarian Diagnostics",
-                    // HeaderSubtitle = "Inspect local runtime health and export a diagnostic snapshot.",
-                    ToolbarLayout = DeucarianEditorWorkbenchToolbarLayout.CompactSingleLine,
-                    TopSafeFadeName = WallpaperTopSafeFadeName
-                });
-
-            BuildToolbar();
-
-            IMGUIContainer content = workbench.AddImGuiContent(DrawWorkbenchContent, ContentName);
-            content.style.flexGrow = 1f;
-            content.style.minHeight = 0f;
-
-            footer = DeucarianEditorWorkbenchSurfaces.CreateFooter(
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                "Copy JSON",
-                HandleCopyJsonClicked,
-                GetPackageVersionLabel());
-            footer.Root.name = FooterName;
-            footer.Summary.name = FooterSummaryName;
-            footer.Action.name = CopyJsonButtonName;
-            footer.Action.tooltip = "Copy the current diagnostics snapshot as JSON.";
-            DeucarianEditorCommandBar.ConfigureAction(
-                footer.Action,
-                DeucarianEditorIconIds.Copy,
-                "Copy JSON",
-                footer.Action.tooltip);
-            workbench.Footer.Add(footer.Root);
-
-            UpdatePresentation();
+            navigation?.Dispose();
+            navigation = new DeucarianEditorPageSession(this, DeucarianToolIds.Diagnostics, BuildPage);
         }
 
-        private void OnFocus()
+        internal static IDeucarianEditorPage CreatePage() =>
+            DeucarianEditorWindowPages.Create<DiagnosticsWindow>(
+                (window, root) => window.BuildPage(root), activate: (window, route) => window.UpdatePresentation(), update: window => window.UpdateRuntimeOverlayPresentation());
+
+        private DeucarianEditorPageSession navigation;
+        private VisualElement pageRoot;
+        private VisualElement PageRoot => pageRoot ?? rootVisualElement;
+
+        private void BuildPage(VisualElement root)
         {
-            UpdatePresentation();
-        }
-
-        private void OnInspectorUpdate()
-        {
-            UpdateRuntimeOverlayPresentation();
-        }
-
-        private void BuildToolbar()
-        {
-            DeucarianEditorCommandBarLanes lanes =
-                DeucarianEditorCommandBar.CreateLanes(workbench.Toolbar);
-
-            runtimeOverlayButton = DeucarianEditorCommandBar.CreateToggle(
-                "Runtime Overlay",
-                HandleRuntimeOverlayClicked,
-                false,
-                DeucarianEditorIconIds.Monitor,
-                "Show or hide the runtime diagnostics overlay in the active scene.");
-            runtimeOverlayButton.name = RuntimeOverlayButtonName;
-            runtimeOverlayButton.tooltip = "Show or hide the runtime diagnostics overlay in the active scene.";
-            DeucarianEditorCommandBar.SetMinimumWidth(runtimeOverlayButton, 160f);
-            lanes.Leading.Add(runtimeOverlayButton);
-
-            toolbarSummary = lanes.Summary;
-            toolbarSummary.name = ToolbarSummaryName;
-
-            refreshButton = DeucarianEditorCommandBar.CreateAction(
-                DeucarianEditorIconIds.Refresh,
-                "Refresh",
-                HandleRefreshClicked,
-                false,
-                "Build a fresh local diagnostics snapshot.");
+            pageRoot = root;
+            workspace?.Dispose();
+            PageRoot.Clear();
+            workspace = new DeucarianEditorCollectionWorkspace(PageRoot, Application.productName,
+                "Diagnostics", "A local snapshot. Start with what needs attention.",
+                DeucarianToolIds.Diagnostics, "Search diagnostic sections…");
+            var shell = workspace.Workspace;
+            refreshButton = DeucarianEditorWorkspaceControls.Button("Refresh snapshot", HandleRefreshClicked);
             refreshButton.name = RefreshButtonName;
-            refreshButton.tooltip = "Build a fresh local diagnostics snapshot.";
-            lanes.Trailing.Add(refreshButton);
+            shell.PageActions.Add(refreshButton);
+            copyButton = DeucarianEditorWorkspaceControls.Button("Copy JSON", HandleCopyJsonClicked);
+            copyButton.name = CopyJsonButtonName;
+            shell.PageActions.Add(copyButton);
+            var tabs = new DeucarianEditorChoiceBar(new[] { "Needs attention", "All sections" }, showAll ? 1 : 0, true);
+            tabs.Changed += value => { showAll = value == 1; RenderSections(); };
+            shell.Tabs.Add(tabs);
+            runtimeOverlayButton = DeucarianEditorWorkspaceControls.Button("Runtime overlay", HandleRuntimeOverlayClicked);
+            runtimeOverlayButton.name = RuntimeOverlayButtonName;
+            runtimeOverlayButton.tooltip = "Show or hide the runtime overlay in the active scene. In Edit Mode this changes the scene and supports Undo.";
+            shell.Scope.Add(runtimeOverlayButton);
+            toolbarSummary = DeucarianEditorWorkspaceControls.Label(string.Empty, "dw-muted");
+            toolbarSummary.name = ToolbarSummaryName;
+            shell.Scope.Add(toolbarSummary);
+            shell.FooterLeading.name = FooterSummaryName;
+            shell.Footer.name = FooterName;
+            shell.FooterTrailing.text = GetPackageVersionLabel();
+            shell.SearchField.RegisterValueChangedCallback(evt => { search = evt.newValue ?? ""; RenderSections(); });
+            UpdatePresentation();
         }
 
-        private void DrawWorkbenchContent()
-        {
-            using (DeucarianEditorWorkbenchGUI.BeginEmbeddedPage(GUILayout.ExpandHeight(true)))
-            {
-                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-                try
-                {
-                    DrawSummary();
-                    DrawSections();
-                }
-                finally
-                {
-                    EditorGUILayout.EndScrollView();
-                }
-            }
-        }
+        private void OnFocus() => UpdatePresentation();
+        private void OnInspectorUpdate() => UpdateRuntimeOverlayPresentation();
 
-        private void DrawSummary()
+        private void RenderSections()
         {
-            DeucarianEditorWorkbenchGUI.DrawPanel("Summary", () =>
+            if (workspace == null) return;
+            var rows = new List<DeucarianEditorCollectionItem>();
+            DiagnosticSection selected = null;
+            if (report?.Sections != null)
             {
-                DiagnosticSeverity severity = report != null ? report.Severity : DiagnosticSeverity.Info;
-                DeucarianEditorWorkbenchGUI.DrawStatusRow(
-                    GetSeverityMarker(severity),
-                    severity.ToString(),
-                    ToEditorStatus(severity));
-                DeucarianEditorWorkbenchGUI.DrawSeparator();
-                DeucarianEditorWorkbenchGUI.DrawKeyValueRow("Sections", GetSectionCount().ToString());
-                DeucarianEditorWorkbenchGUI.DrawKeyValueRow("Generated", GetGeneratedTimeLabel());
-            });
-        }
-
-        private void DrawSections()
-        {
-            DeucarianEditorWorkbenchGUI.DrawPanel("Sections", () =>
-            {
-                if (report == null || report.Sections == null || report.Sections.Count == 0)
-                {
-                    DrawEmptySectionsState();
-                    return;
-                }
-
                 for (int i = 0; i < report.Sections.Count; i++)
                 {
-                    DiagnosticSection section = report.Sections[i];
-                    if (section == null)
-                    {
-                        continue;
-                    }
-
-                    EditorGUILayout.BeginHorizontal();
-                    try
-                    {
-                        EditorGUILayout.LabelField(
-                            section.Title ?? section.Id ?? string.Empty,
-                            DeucarianEditorWorkbenchGUI.BoldLabelStyle);
-                        DeucarianEditorStatusBadge.Draw(
-                            section.Severity.ToString(),
-                            ToEditorStatus(section.Severity),
-                            GUILayout.Width(88));
-                    }
-                    finally
-                    {
-                        EditorGUILayout.EndHorizontal();
-                    }
-
-                    if (section.Items != null)
-                    {
-                        for (int j = 0; j < section.Items.Count; j++)
-                        {
-                            DrawItem(section.Items[j]);
-                        }
-                    }
-
-                    if (i < report.Sections.Count - 1)
-                    {
-                        DeucarianEditorWorkbenchGUI.DrawSeparator();
-                        GUILayout.Space(4f);
-                    }
+                    var section = report.Sections[i];
+                    if (section == null) continue;
+                    string title = section.Title ?? section.Id ?? "Unnamed section";
+                    bool attention = section.Severity >= DiagnosticSeverity.Warning;
+                    if (!showAll && !attention) continue;
+                    if (title.IndexOf(search, System.StringComparison.OrdinalIgnoreCase) < 0 &&
+                        (section.Id ?? "").IndexOf(search, System.StringComparison.OrdinalIgnoreCase) < 0) continue;
+                    string id = i.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    if (selectedSection == id) selected = section;
+                    rows.Add(new DeucarianEditorCollectionItem(id, title,
+                        (section.Items?.Count ?? 0) + " captured values",
+                        attention ? section.Severity.ToString() : "Captured",
+                        () => { selectedSection = id; RenderSections(); }));
                 }
-            });
-        }
-
-        private static void DrawEmptySectionsState()
-        {
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                float iconSize = DeucarianEditorLayoutMetrics.IconSize;
-                Rect iconRect = GUILayoutUtility.GetRect(
-                    iconSize,
-                    iconSize,
-                    GUILayout.Width(iconSize));
-                DeucarianEditorIcons.DrawIcon(
-                    iconRect,
-                    DeucarianEditorIcons.GetIcon(DeucarianEditorIconIds.Info),
-                    DeucarianEditorTheme.MutedText);
-                GUILayout.Space(DeucarianEditorLayoutMetrics.IconTextGap);
-                EditorGUILayout.LabelField(
-                    "No diagnostic providers are currently registered.",
-                    DeucarianEditorWorkbenchGUI.WordWrappedMiniLabelStyle);
             }
-        }
-
-        private static void DrawItem(DiagnosticItem item)
-        {
-            if (item == null)
+            workspace.SetItems(rows, selected != null ? selectedSection : null,
+                GetSectionCount() == 0 ? "No diagnostic providers are registered." :
+                search.Length > 0 ? "No sections match your search." :
+                showAll ? "No sections in this snapshot." : "No warnings or errors in this snapshot. All sections contains the captured details.");
+            workspace.Details.Clear();
+            var form = new DeucarianEditorWorkspaceForm(workspace.Details);
+            if (selected == null)
             {
+                form.Section("Snapshot details").Note(() => "Select a section to inspect its captured values. Refresh is explicit; this is not live telemetry.");
                 return;
             }
-
-            EditorGUILayout.BeginHorizontal();
-            try
-            {
-                EditorGUILayout.LabelField(
-                    item.Label ?? item.Key,
-                    DeucarianEditorWorkbenchGUI.LabelStyle,
-                    GUILayout.MinWidth(160));
-                EditorGUILayout.LabelField(
-                    item.Value ?? string.Empty,
-                    DeucarianEditorWorkbenchGUI.LabelStyle);
-                DeucarianEditorStatusBadge.Draw(item.Severity.ToString(), ToEditorStatus(item.Severity), GUILayout.Width(88));
-            }
-            finally
-            {
-                EditorGUILayout.EndHorizontal();
-            }
-
-            if (!string.IsNullOrWhiteSpace(item.Message))
-            {
-                EditorGUILayout.HelpBox(item.Message, ToMessageType(item.Severity));
-            }
+            var values = form.Section(selected.Title ?? selected.Id ?? "Section");
+            if (selected.Items != null)
+                foreach (var item in selected.Items)
+                {
+                    if (item == null) continue;
+                    var target = item;
+                    values.ReadOnly("diagnostic-value-" + item.Key, item.Label ?? item.Key, () => target.Value);
+                    if (!string.IsNullOrWhiteSpace(item.Message)) values.Note(() => target.Message);
+                }
         }
 
         private void RefreshReport()
@@ -269,19 +141,11 @@ namespace Deucarian.Diagnostics.Editor
             Repaint();
         }
 
-        private void HandleRefreshClicked()
-        {
-            copyStatus = null;
-            RefreshReport();
-        }
+        private void HandleRefreshClicked() { copyStatus = null; RefreshReport(); }
 
         private void HandleCopyJsonClicked()
         {
-            if (report == null)
-            {
-                return;
-            }
-
+            if (report == null) return;
             DiagnosticsJsonExporter.CopyToClipboard(report);
             copyStatus = "JSON copied";
             UpdatePresentation();
@@ -295,94 +159,35 @@ namespace Deucarian.Diagnostics.Editor
 
         private void UpdatePresentation()
         {
-            int sectionCount = GetSectionCount();
-            DiagnosticSeverity severity = report != null ? report.Severity : DiagnosticSeverity.Info;
-
-            if (toolbarSummary != null)
-            {
-                toolbarSummary.text = sectionCount + (sectionCount == 1 ? " section" : " sections")
-                    + " · " + GetGeneratedTimeLabel();
-                toolbarSummary.tooltip = toolbarSummary.text;
-            }
-
-            if (footer != null)
-            {
-                footer.StatusLabel.text = severity.ToString();
-                footer.Summary.text = string.IsNullOrWhiteSpace(copyStatus)
-                    ? sectionCount + (sectionCount == 1 ? " diagnostic section" : " diagnostic sections")
-                    : copyStatus;
-                footer.Summary.tooltip = footer.Summary.text;
-                footer.Action.SetEnabled(report != null);
-                DeucarianEditorWorkbenchSurfaces.SetFooterIcon(
-                    footer,
-                    GetSeverityIconId(severity));
-                DeucarianEditorWorkbenchSurfaces.SetFooterStatus(footer, ToEditorStatus(severity));
-            }
-
+            if (workspace == null) return;
+            toolbarSummary.text = GetSectionCount() + " sections · Captured " + GetGeneratedTimeLabel();
+            workspace.Workspace.FooterLeading.text = string.IsNullOrWhiteSpace(copyStatus)
+                ? "Local project · " + (EditorApplication.isPlaying ? "Play Mode" : "Edit Mode") : copyStatus;
+            copyButton.SetEnabled(report != null);
+            RenderSections();
             UpdateRuntimeOverlayPresentation();
         }
 
         private void UpdateRuntimeOverlayPresentation()
         {
-            if (runtimeOverlayButton == null)
-            {
-                return;
-            }
-
+            if (runtimeOverlayButton == null) return;
             bool visible = IsRuntimeOverlayVisibleInActiveScene();
-            DeucarianEditorCommandBar.SetActive(runtimeOverlayButton, visible);
-            DeucarianEditorCommandBar.SetText(
-                runtimeOverlayButton,
-                visible ? "Runtime Overlay On" : "Runtime Overlay Off");
+            runtimeOverlayButton.text = visible ? "Runtime Overlay On" : "Runtime Overlay Off";
+            runtimeOverlayButton.EnableInClassList("dw-selected", visible);
         }
 
-        private int GetSectionCount()
-        {
-            return report != null && report.Sections != null ? report.Sections.Count : 0;
-        }
-
-        private string GetGeneratedTimeLabel()
-        {
-            return report == null
-                ? "Not generated"
-                : report.GeneratedAtUtc.ToUniversalTime().ToString("HH:mm:ss 'UTC'");
-        }
-
+        private int GetSectionCount() => report?.Sections?.Count ?? 0;
+        private string GetGeneratedTimeLabel() => report == null ? "Not generated" : report.GeneratedAtUtc.ToUniversalTime().ToString("HH:mm:ss 'UTC'");
         private static string GetPackageVersionLabel()
         {
-            UnityEditor.PackageManager.PackageInfo packageInfo =
-                UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(DiagnosticReport).Assembly);
-            string version = packageInfo != null ? packageInfo.version : "0.1.3";
-            return "Diagnostics " + version;
-        }
-
-        private static string GetSeverityMarker(DiagnosticSeverity severity)
-        {
-            switch (severity)
-            {
-                case DiagnosticSeverity.Success:
-                    return "✓";
-                case DiagnosticSeverity.Warning:
-                    return "!";
-                case DiagnosticSeverity.Error:
-                    return "×";
-                default:
-                    return "i";
-            }
+            var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(DiagnosticReport).Assembly);
+            return "Diagnostics " + (info != null ? info.version : "development");
         }
 
         private static bool IsRuntimeOverlayVisibleInActiveScene()
         {
-            RuntimeDiagnosticsOverlay[] overlays = FindRuntimeOverlaysInActiveScene();
-            for (int i = 0; i < overlays.Length; i++)
-            {
-                RuntimeDiagnosticsOverlay overlay = overlays[i];
-                if (overlay != null && overlay.isActiveAndEnabled)
-                {
-                    return true;
-                }
-            }
-
+            foreach (var overlay in FindRuntimeOverlaysInActiveScene())
+                if (overlay != null && overlay.isActiveAndEnabled) return true;
             return false;
         }
     }
