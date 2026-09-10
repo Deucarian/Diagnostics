@@ -239,16 +239,5 @@ namespace Deucarian.Diagnostics.Editor
             }
         }
 
-        internal static void ApplyPreferredSizeOnce(DiagnosticsWindow window)
-        {
-            if (window == null || EditorPrefs.GetBool(PreferredSizeKey, false))
-            {
-                return;
-            }
-
-            Rect current = window.position;
-            window.position = new Rect(current.x, current.y, PreferredSize.x, PreferredSize.y);
-            EditorPrefs.SetBool(PreferredSizeKey, true);
-        }
     }
 }

@@ -44,133 +44,39 @@ namespace Deucarian.Diagnostics.Tests
         }
 
         [Test]
-        public void CreateGuiBuildsSharedCommandBarAndFooterWithoutPackageHeader()
+        public void CreateGuiBuildsSharedWorkspaceWithoutDuplicatedChrome()
         {
             CreateWindow();
-
-            VisualElement root = window.rootVisualElement;
-            VisualElement shell = root.Q<VisualElement>(className: "deucarian-workbench");
-            VisualElement header = root.Q<VisualElement>(className: DeucarianEditorPackageHeader.RootClass);
-            Button overlay = root.Q<Button>("diagnostics-runtime-overlay-toggle");
-            Button refresh = root.Q<Button>("diagnostics-refresh-button");
-            Button copy = root.Q<Button>("diagnostics-copy-json-button");
-
-            Assert.NotNull(shell);
-            Assert.IsNull(header);
-            VisualElement toolbar = root.Q<VisualElement>("deucarian-workbench-toolbar");
-            Assert.NotNull(toolbar);
-            Assert.IsTrue(toolbar.ClassListContains(DeucarianEditorCommandBar.RootClass));
-            VisualElement leadingLane = toolbar.Q<VisualElement>(
-                className: DeucarianEditorCommandBar.LeadingLaneClass);
-            Label summaryLane = toolbar.Q<Label>(
-                className: DeucarianEditorCommandBar.SummaryLaneClass);
-            VisualElement trailingLane = toolbar.Q<VisualElement>(
-                className: DeucarianEditorCommandBar.TrailingLaneClass);
-            Assert.NotNull(leadingLane);
-            Assert.NotNull(summaryLane);
-            Assert.NotNull(trailingLane);
-            Assert.IsTrue(toolbar.ClassListContains(
-                DeucarianEditorWorkbenchToolbar.CompactSingleLineClass));
-            Assert.NotNull(root.Q<IMGUIContainer>("diagnostics-workbench-content"));
-            Assert.NotNull(root.Q<VisualElement>("diagnostics-workbench-footer"));
-            Assert.NotNull(root.Q<Label>("diagnostics-toolbar-summary"));
-            Assert.NotNull(overlay);
-            Assert.NotNull(refresh);
-            Assert.NotNull(copy);
-            Assert.AreSame(leadingLane, overlay.parent);
-            Assert.AreSame(summaryLane, root.Q<Label>("diagnostics-toolbar-summary"));
-            Assert.AreSame(trailingLane, refresh.parent);
-            Assert.IsTrue(overlay.ClassListContains("deucarian-workbench-toolbar__toggle"));
-            Assert.IsTrue(refresh.ClassListContains("deucarian-workbench-toolbar__action--standard"));
-            Assert.IsTrue(copy.ClassListContains("deucarian-workbench-operation-footer__action"));
-            Assert.IsTrue(overlay.ClassListContains(DeucarianEditorIconTextButton.RootClass));
-            Assert.IsTrue(refresh.ClassListContains(DeucarianEditorIconTextButton.RootClass));
-            Assert.IsTrue(copy.ClassListContains(DeucarianEditorIconTextButton.RootClass));
-            Assert.IsTrue(overlay.ClassListContains(DeucarianEditorCommandBar.ToggleClass));
-            Assert.IsTrue(refresh.ClassListContains(DeucarianEditorCommandBar.ActionClass));
-            Assert.NotNull(overlay.Q<Image>(className: DeucarianEditorIconTextButton.IconClass));
-            Assert.NotNull(refresh.Q<Image>(className: DeucarianEditorIconTextButton.IconClass));
-            Assert.NotNull(copy.Q<Image>(className: DeucarianEditorIconTextButton.IconClass));
-            Assert.NotNull(overlay.Q<VisualElement>(
-                className: DeucarianEditorIconTextButton.GapClass));
-            Assert.NotNull(refresh.Q<VisualElement>(
-                className: DeucarianEditorIconTextButton.GapClass));
-            Assert.NotNull(copy.Q<VisualElement>(
-                className: DeucarianEditorIconTextButton.GapClass));
-            Assert.AreEqual(
-                "Runtime Overlay Off",
-                overlay.Q<Label>(className: DeucarianEditorIconTextButton.LabelClass).text);
-            Assert.AreEqual(8f, overlay.style.paddingLeft.value.value);
-            Assert.AreEqual(8f, overlay.style.paddingRight.value.value);
-            Assert.AreEqual(160f, overlay.style.minWidth.value.value);
-            Assert.AreEqual(0f, overlay.style.flexShrink.value);
-            Assert.AreEqual(
-                DeucarianEditorLayoutMetrics.CommandControlHeight,
-                overlay.style.height.value.value);
-            Assert.AreEqual(
-                DeucarianEditorLayoutMetrics.TextLineHeight,
-                overlay.Q<Label>(className: DeucarianEditorIconTextButton.LabelClass)
-                    .style.height.value.value);
-            Assert.AreEqual(
-                DeucarianEditorLayoutMetrics.TextLineHeight,
-                toolbar.Q<Label>(className: DeucarianEditorCommandBar.SummaryLaneClass)
-                    .style.height.value.value);
-            Assert.AreEqual(
-                PickingMode.Ignore,
-                overlay.Q<VisualElement>(
-                    className: DeucarianEditorIconTextButton.ContentClass).pickingMode);
-            Assert.AreEqual(
-                8f,
-                copy.Q<VisualElement>(
-                    className: DeucarianEditorIconTextButton.GapClass).style.width.value.value);
-            Assert.AreEqual(new Vector2(420f, 280f), window.minSize);
+            var root = window.rootVisualElement;
+            Assert.NotNull(root.Q("workspace-navigation"));
+            Assert.NotNull(root.Q("workspace-collection"));
+            Assert.NotNull(root.Q("workspace-details"));
+            Assert.NotNull(root.Q<Button>("diagnostics-copy-json-button"));
+            Assert.NotNull(root.Q<Button>("diagnostics-refresh-button"));
+            Assert.AreEqual("Runtime Overlay Off", root.Q<Button>("diagnostics-runtime-overlay-toggle").text);
             Assert.IsNull(typeof(DiagnosticsWindow).GetMethod("OnGUI", BindingFlags.Instance | BindingFlags.NonPublic));
         }
 
         [Test]
-        public void EmptyAndSectionStatesAvoidNestedHelpAndCardSurfaces()
+        public void NormalSectionsAreAvailableWithoutBeingShownAsWarnings()
         {
-            const string assetPath = "Packages/com.deucarian.diagnostics/Editor/DiagnosticsWindow.cs";
-            PackageInfo package = PackageInfo.FindForAssetPath(assetPath);
-            string absolutePath = package == null
-                ? Path.GetFullPath("Editor/DiagnosticsWindow.cs")
-                : Path.Combine(package.resolvedPath, "Editor/DiagnosticsWindow.cs");
-            string source = ReadPartialClassSource(absolutePath);
-
-            StringAssert.Contains("DrawEmptySectionsState", source);
-            StringAssert.Contains("DeucarianEditorCommandBar", source);
-            StringAssert.Contains("BeginEmbeddedPage", source);
-            StringAssert.DoesNotContain("BeginSettingsPage", source);
-            StringAssert.Contains("// IncludeHeader = true", source);
-            StringAssert.Contains("DeucarianEditorIconIds.Info", source);
-            StringAssert.Contains("DeucarianEditorLayoutMetrics.IconSize", source);
-            StringAssert.Contains("DeucarianEditorLayoutMetrics.IconTextGap", source);
-            StringAssert.Contains("DeucarianEditorWorkbenchGUI.BoldLabelStyle", source);
-            StringAssert.Contains("DeucarianEditorWorkbenchGUI.WordWrappedMiniLabelStyle", source);
-            StringAssert.DoesNotContain("DeucarianEditorChrome.DrawInlineHelp", source);
-            StringAssert.DoesNotContain("DeucarianEditorCards.DrawInlineCard", source);
-            StringAssert.DoesNotContain("EditorStyles.boldLabel", source);
-            StringAssert.DoesNotContain("EditorStyles.wordWrappedMiniLabel", source);
+            DiagnosticProviderRegistry.Register(new WorkbenchProvider());
+            CreateWindow();
+            var rows = window.rootVisualElement.Q("workspace-collection-rows");
+            Assert.AreEqual(0, rows.childCount);
+            typeof(DiagnosticsWindow).GetField("showAll", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(window, true);
+            Invoke(window, "RenderSections");
+            Assert.AreEqual(1, rows.childCount);
         }
 
-        [TestCase(899f, "deucarian-responsive--narrow")]
-        [TestCase(900f, "deucarian-responsive--compact")]
-        [TestCase(1179f, "deucarian-responsive--compact")]
-        [TestCase(1180f, "deucarian-responsive--wide")]
-        public void WorkbenchUsesExactResponsiveBoundaryClasses(float width, string expectedClass)
+        [TestCase(600f, true)]
+        [TestCase(1200f, false)]
+        public void WorkspaceRespondsToNarrowWidths(float width, bool narrow)
         {
             CreateWindow();
-            object workbench = GetField<object>(window, "workbench");
-            MethodInfo applyResponsiveLayout = workbench.GetType().GetMethod("ApplyResponsiveLayout");
-            VisualElement shell = window.rootVisualElement.Q<VisualElement>(className: "deucarian-workbench");
-
-            Assert.NotNull(applyResponsiveLayout);
-            applyResponsiveLayout.Invoke(workbench, new object[] { width });
-
-            Assert.IsTrue(shell.ClassListContains(expectedClass));
-            Assert.AreEqual(
-                1,
-                shell.GetClasses().Count(className => className.StartsWith("deucarian-responsive--", StringComparison.Ordinal)));
+            var collection = GetField<DeucarianEditorCollectionWorkspace>(window, "workspace");
+            collection.Workspace.ApplyWidth(width);
+            Assert.AreEqual(narrow, collection.Workspace.Root.ClassListContains("dw-narrow"));
         }
 
         [Test]
@@ -188,7 +94,7 @@ namespace Deucarian.Diagnostics.Tests
                 "0 sections",
                 window.rootVisualElement.Q<Label>("diagnostics-toolbar-summary").text);
             Assert.AreEqual(
-                "0 diagnostic sections",
+                "Local project · Edit Mode",
                 window.rootVisualElement.Q<Label>("diagnostics-footer-summary").text);
         }
 

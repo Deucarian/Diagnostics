@@ -1,5 +1,16 @@
 # Deucarian Diagnostics
 
+## In-window navigation
+
+The left sidebar changes pages in the current window, keeping each page's draft and session alive. Right-click a sidebar item and choose **Open in new window** for an independent workspace. Closing a workspace releases its pages; ordinary page changes do not reset lab messages or stop package operations.
+
+
+## Shared workspace (0.2.0)
+
+Migrate to the shared Editor workspace with attention-first filtering, captured section details, explicit snapshot refresh, JSON copying and an opt-in runtime overlay.
+
+Requires Editor 1.5.0 or newer. Development is delivered through Git `#develop`; this change does not promote the stable `#main` channel.
+
 ## What this is
 
 `com.deucarian.diagnostics` is a local diagnostics package for Unity developers and runtime debug builds.
@@ -45,7 +56,7 @@ Development:
 "com.deucarian.diagnostics": "https://github.com/Deucarian/Diagnostics.git#develop"
 ```
 
-Current package version: `0.1.6`.
+Current package version: `0.2.3`.
 
 Dependencies:
 
