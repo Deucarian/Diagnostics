@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 using System.Reflection;
 using System.IO;
@@ -8,6 +9,7 @@ using NUnit.Framework;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.TestTools;
 
 namespace Deucarian.Diagnostics.Tests
 {
@@ -63,10 +65,29 @@ namespace Deucarian.Diagnostics.Tests
             DiagnosticProviderRegistry.Register(new WorkbenchProvider());
             CreateWindow();
             var rows = window.rootVisualElement.Q("workspace-collection-rows");
-            Assert.AreEqual(0, rows.childCount);
-            typeof(DiagnosticsWindow).GetField("showAll", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(window, true);
-            Invoke(window, "RenderSections");
             Assert.AreEqual(1, rows.childCount);
+            typeof(DiagnosticsWindow).GetField("showAll", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(window, false);
+            Invoke(window, "RenderSections");
+            Assert.AreEqual(0, rows.childCount);
+        }
+
+        [UnityTest]
+        public IEnumerator ProviderSearchAndDetailActionsRemainInTheirLocalRegionsAfterRefresh()
+        {
+            DiagnosticProviderRegistry.Register(new WorkbenchProvider());
+            CreateWindow();
+            window.Show();
+            yield return null;
+            var root = window.rootVisualElement;
+            var search = root.Q<TextField>("diagnostics-provider-search");
+            Assert.IsNotNull(root.Q("diagnostics-filters").Q<TextField>("diagnostics-provider-search"));
+            search.value = "no matching provider";
+            Assert.AreEqual(0, root.Q("workspace-collection-rows").childCount);
+            Assert.IsNotNull(root.Q("workspace-details").Q<Button>("diagnostics-refresh-button"));
+            search.value = "Workbench";
+            Invoke(window, "HandleRefreshClicked");
+            Assert.AreEqual(1, root.Q("workspace-collection-rows").childCount);
+            Assert.IsNotNull(root.Q("workspace-details").Q<Button>("diagnostics-copy-json-button"));
         }
 
         [TestCase(600f, true)]

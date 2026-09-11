@@ -58,29 +58,49 @@ namespace Deucarian.Diagnostics.Editor
             workspace?.Dispose();
             PageRoot.Clear();
             workspace = new DeucarianEditorCollectionWorkspace(PageRoot, Application.productName,
-                "Diagnostics", "A local snapshot. Start with what needs attention.",
-                DeucarianToolIds.Diagnostics, "Search diagnostic sections…");
+                "Diagnostics", "See what needs attention.",
+                DeucarianToolIds.Diagnostics, "Find a tool…");
+            workspace.UsePanels();
+            workspace.Collection.AddToClassList("dw-balanced-panels");
             var shell = workspace.Workspace;
-            refreshButton = DeucarianEditorWorkspaceControls.Button("Refresh snapshot", HandleRefreshClicked);
+            shell.SetScopeBeforeTabs();
+            refreshButton = DeucarianEditorWorkspaceControls.IconButton("Refresh", DeucarianEditorIconIds.Refresh, HandleRefreshClicked);
             refreshButton.name = RefreshButtonName;
-            shell.PageActions.Add(refreshButton);
             copyButton = DeucarianEditorWorkspaceControls.Button("Copy JSON", HandleCopyJsonClicked);
             copyButton.name = CopyJsonButtonName;
-            shell.PageActions.Add(copyButton);
-            var tabs = new DeucarianEditorChoiceBar(new[] { "Needs attention", "All sections" }, showAll ? 1 : 0, true);
-            tabs.Changed += value => { showAll = value == 1; RenderSections(); };
-            shell.Tabs.Add(tabs);
+            var filter = new PopupField<string>(new List<string> { "All providers", "Needs attention" }, showAll ? 0 : 1);
+            filter.RegisterValueChangedCallback(_ => { showAll = filter.index == 0; selectedSection = null; RenderSections(); });
+            shell.Scope.AddToClassList("dw-filter-scope");
+            var filters = DeucarianEditorWorkspaceControls.Region("diagnostics-filters", "dw-filter-toolbar");
+            filters.Add(DeucarianEditorWorkspaceControls.Field("Scope", filter));
+            var providerSearch = DeucarianEditorSearchField.Create("Find a provider…", value => { search = value ?? ""; RenderSections(); }, search);
+            providerSearch.name = "diagnostics-provider-search";
+            filters.Add(providerSearch);
+            var refreshIcon = DeucarianEditorWorkspaceControls.IconButton(string.Empty, DeucarianEditorIconIds.Refresh, HandleRefreshClicked);
+            refreshIcon.tooltip = "Refresh snapshot";
+            filters.Add(refreshIcon);
+            shell.Scope.Add(filters);
+            health = new DeucarianEditorStatusSummary("diagnostics-health");
+            health.Root.AddToClassList("dw-status-compact");
+            shell.Content.Insert(0, health.Root);
+            detailActions = DeucarianEditorWorkspaceControls.EndActions(refreshButton,
+                DeucarianEditorWorkspaceControls.IconButton("Export snapshot", DeucarianEditorIconIds.Download, ExportJson, DeucarianEditorButtonRole.Primary));
+            detailActions.AddToClassList("dw-collection-footer");
+            exportStatus = DeucarianEditorWorkspaceControls.Label(string.Empty, "dw-muted");
+            var advanced = new Foldout { text = "More options", value = false };
+            advanced.AddToClassList("dw-foldout");
+            detailOptions = advanced;
             runtimeOverlayButton = DeucarianEditorWorkspaceControls.Button("Runtime overlay", HandleRuntimeOverlayClicked);
             runtimeOverlayButton.name = RuntimeOverlayButtonName;
             runtimeOverlayButton.tooltip = "Show or hide the runtime overlay in the active scene. In Edit Mode this changes the scene and supports Undo.";
-            shell.Scope.Add(runtimeOverlayButton);
+            advanced.Add(DeucarianEditorWorkspaceControls.Actions(runtimeOverlayButton, copyButton));
             toolbarSummary = DeucarianEditorWorkspaceControls.Label(string.Empty, "dw-muted");
             toolbarSummary.name = ToolbarSummaryName;
-            shell.Scope.Add(toolbarSummary);
+            advanced.Add(toolbarSummary);
             shell.FooterLeading.name = FooterSummaryName;
             shell.Footer.name = FooterName;
-            shell.FooterTrailing.text = GetPackageVersionLabel();
-            shell.SearchField.RegisterValueChangedCallback(evt => { search = evt.newValue ?? ""; RenderSections(); });
+            DeucarianEditorWorkspaceControls.Show(shell.Footer, false);
+            DeucarianEditorWorkspaceNavigation.Populate(shell, DeucarianToolIds.Diagnostics);
             UpdatePresentation();
         }
 
@@ -92,6 +112,8 @@ namespace Deucarian.Diagnostics.Editor
             if (workspace == null) return;
             var rows = new List<DeucarianEditorCollectionItem>();
             DiagnosticSection selected = null;
+            string firstId = null;
+            DiagnosticSection first = null;
             if (report?.Sections != null)
             {
                 for (int i = 0; i < report.Sections.Count; i++)
@@ -104,13 +126,14 @@ namespace Deucarian.Diagnostics.Editor
                     if (title.IndexOf(search, System.StringComparison.OrdinalIgnoreCase) < 0 &&
                         (section.Id ?? "").IndexOf(search, System.StringComparison.OrdinalIgnoreCase) < 0) continue;
                     string id = i.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    if (first == null) { first = section; firstId = id; }
                     if (selectedSection == id) selected = section;
-                    rows.Add(new DeucarianEditorCollectionItem(id, title,
-                        (section.Items?.Count ?? 0) + " captured values",
-                        attention ? section.Severity.ToString() : "Captured",
-                        () => { selectedSection = id; RenderSections(); }));
+                    rows.Add(new DeucarianEditorCollectionItem(id, title, string.Empty,
+                        attention ? section.Severity.ToString() : "No issues",
+                        () => { selectedSection = id; RenderSections(); }, iconId: SectionIcon(section)));
                 }
             }
+            if (selected == null) { selected = first; selectedSection = firstId; }
             workspace.SetItems(rows, selected != null ? selectedSection : null,
                 GetSectionCount() == 0 ? "No diagnostic providers are registered." :
                 search.Length > 0 ? "No sections match your search." :
@@ -120,9 +143,17 @@ namespace Deucarian.Diagnostics.Editor
             if (selected == null)
             {
                 form.Section("Snapshot details").Note(() => "Select a section to inspect its captured values. Refresh is explicit; this is not live telemetry.");
+                AppendDetailActions();
                 return;
             }
-            var values = form.Section(selected.Title ?? selected.Id ?? "Section");
+            var detailTitle = DeucarianEditorWorkspaceControls.Label(selected.Title ?? selected.Id ?? "Section", "dw-feature-title");
+            var header = DeucarianEditorWorkspaceControls.IconPanel("diagnostics-detail-heading", SectionIcon(selected), detailTitle);
+            header.AddToClassList("dw-panel-flush");
+            workspace.Details.Add(header);
+            workspace.Details.Add(DeucarianEditorWorkspaceControls.Divider());
+            var propertyList = DeucarianEditorWorkspaceControls.Region(null, "dw-property-list");
+            workspace.Details.Add(propertyList);
+            var values = new DeucarianEditorWorkspaceForm(propertyList);
             if (selected.Items != null)
                 foreach (var item in selected.Items)
                 {
@@ -131,7 +162,19 @@ namespace Deucarian.Diagnostics.Editor
                     values.ReadOnly("diagnostic-value-" + item.Key, item.Label ?? item.Key, () => target.Value);
                     if (!string.IsNullOrWhiteSpace(item.Message)) values.Note(() => target.Message);
                 }
+            AppendDetailActions();
         }
+
+        private void AppendDetailActions()
+        {
+            workspace.Details.hierarchy.Add(detailActions);
+            workspace.Details.Add(exportStatus);
+            workspace.Details.Add(detailOptions);
+        }
+
+        private static string SectionIcon(DiagnosticSection section) =>
+            (section.Id ?? "").IndexOf("notification", System.StringComparison.OrdinalIgnoreCase) >= 0
+                ? DeucarianEditorIconIds.Notifications : DeucarianEditorIconIds.Activity;
 
         private void RefreshReport()
         {
@@ -151,6 +194,20 @@ namespace Deucarian.Diagnostics.Editor
             UpdatePresentation();
         }
 
+        private void ExportJson()
+        {
+            if (report == null) return;
+            string path = EditorUtility.SaveFilePanel("Export diagnostics", "", "diagnostics.json", "json");
+            if (string.IsNullOrEmpty(path)) return;
+            try
+            {
+                System.IO.File.WriteAllText(path, DiagnosticsJsonExporter.ToJson(report));
+                copyStatus = "Snapshot exported";
+            }
+            catch (System.Exception error) { copyStatus = "Export failed: " + error.Message; }
+            UpdatePresentation();
+        }
+
         private void HandleRuntimeOverlayClicked()
         {
             SetRuntimeOverlayVisibleInActiveScene(!IsRuntimeOverlayVisibleInActiveScene());
@@ -164,6 +221,15 @@ namespace Deucarian.Diagnostics.Editor
             workspace.Workspace.FooterLeading.text = string.IsNullOrWhiteSpace(copyStatus)
                 ? "Local project · " + (EditorApplication.isPlaying ? "Play Mode" : "Edit Mode") : copyStatus;
             copyButton.SetEnabled(report != null);
+            exportStatus.text = copyStatus ?? string.Empty;
+            DeucarianEditorWorkspaceControls.Show(exportStatus, !string.IsNullOrEmpty(copyStatus));
+            bool available = GetSectionCount() > 0;
+            bool attention = report != null && report.Severity >= DiagnosticSeverity.Warning;
+            health.Set(!available ? "No providers yet" : attention ? "Needs your attention" : "No issues reported",
+                !available ? "Installed providers will appear here when they register."
+                : string.Empty,
+                available ? ToEditorStatus(report.Severity) : DeucarianEditorStatus.Info);
+            health.Root.tooltip = GetSectionCount() + " providers captured · " + GetGeneratedTimeLabel();
             RenderSections();
             UpdateRuntimeOverlayPresentation();
         }
