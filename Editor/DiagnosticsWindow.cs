@@ -25,11 +25,15 @@ namespace Deucarian.Diagnostics.Editor
         private string copyStatus;
         private DeucarianEditorCollectionWorkspace workspace;
         private string selectedSection;
-        private bool showAll;
+        private bool showAll = true;
+        private DeucarianEditorStatusSummary health;
+        private Label exportStatus;
         private string search = string.Empty;
         private Button refreshButton;
         private Button runtimeOverlayButton;
         private Label toolbarSummary;
         private Button copyButton;
+        private VisualElement detailActions;
+        private VisualElement detailOptions;
     }
 }
